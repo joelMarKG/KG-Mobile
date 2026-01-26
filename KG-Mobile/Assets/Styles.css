@@ -1,0 +1,20 @@
+﻿contentpage {
+    background-color: white;
+}
+
+stacklayout {
+    margin: 10;
+}
+
+.mainPageTitle {
+    font-style: bold;
+    font-size: medium;
+    text-align: center;
+}
+
+.button {
+    background-color: #2196F3;
+    color: white;
+    padding: 0px 10px 0px 0px;
+    text-align: center;
+}

@@ -1,0 +1,122 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\joel.marini\\Documents\\KG-Mobile\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|c:\\users\\joel.marini\\documents\\kg-mobile\\services\\graphqlapiserviceshelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|solutionrelative:services\\graphqlapiserviceshelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|c:\\users\\joel.marini\\documents\\kg-mobile\\helpers\\settings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|solutionrelative:helpers\\settings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|c:\\users\\joel.marini\\documents\\kg-mobile\\models\\popupmessage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|solutionrelative:models\\popupmessage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|c:\\users\\joel.marini\\documents\\kg-mobile\\models\\graphqlapi_response_models\\graphqlresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|solutionrelative:models\\graphqlapi_response_models\\graphqlresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|c:\\users\\joel.marini\\documents\\kg-mobile\\services\\graphqlapiservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|solutionrelative:services\\graphqlapiservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|c:\\users\\joel.marini\\documents\\kg-mobile\\viewmodels\\01_inventory\\inventorymoveviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|solutionrelative:viewmodels\\01_inventory\\inventorymoveviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "GraphQLApiServicesHelper.cs",
+              "DocumentMoniker": "C:\\Users\\joel.marini\\Documents\\KG-Mobile\\Services\\GraphQLApiServicesHelper.cs",
+              "RelativeDocumentMoniker": "Services\\GraphQLApiServicesHelper.cs",
+              "ToolTip": "C:\\Users\\joel.marini\\Documents\\KG-Mobile\\Services\\GraphQLApiServicesHelper.cs",
+              "RelativeToolTip": "Services\\GraphQLApiServicesHelper.cs",
+              "ViewState": "AgIAAOUAAAAAAAAAAAAAwBUBAAASAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-22T04:34:02.328Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "PopupMessage.cs",
+              "DocumentMoniker": "C:\\Users\\joel.marini\\Documents\\KG-Mobile\\Models\\PopupMessage.cs",
+              "RelativeDocumentMoniker": "Models\\PopupMessage.cs",
+              "ToolTip": "C:\\Users\\joel.marini\\Documents\\KG-Mobile\\Models\\PopupMessage.cs",
+              "RelativeToolTip": "Models\\PopupMessage.cs",
+              "ViewState": "AgIAAAEAAAAAAAAAAAAqwBUAAAAiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-23T00:44:37.242Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "GraphQLResponse.cs",
+              "DocumentMoniker": "C:\\Users\\joel.marini\\Documents\\KG-Mobile\\Models\\GraphQLAPI_Response_Models\\GraphQLResponse.cs",
+              "RelativeDocumentMoniker": "Models\\GraphQLAPI_Response_Models\\GraphQLResponse.cs",
+              "ToolTip": "C:\\Users\\joel.marini\\Documents\\KG-Mobile\\Models\\GraphQLAPI_Response_Models\\GraphQLResponse.cs",
+              "RelativeToolTip": "Models\\GraphQLAPI_Response_Models\\GraphQLResponse.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-22T20:58:16.839Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Settings.cs",
+              "DocumentMoniker": "C:\\Users\\joel.marini\\Documents\\KG-Mobile\\Helpers\\Settings.cs",
+              "RelativeDocumentMoniker": "Helpers\\Settings.cs",
+              "ToolTip": "C:\\Users\\joel.marini\\Documents\\KG-Mobile\\Helpers\\Settings.cs",
+              "RelativeToolTip": "Helpers\\Settings.cs",
+              "ViewState": "AgIAAEsAAAAAAAAAAAAowGQAAAAvAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-22T20:39:12.907Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "GraphQLApiServices.cs",
+              "DocumentMoniker": "C:\\Users\\joel.marini\\Documents\\KG-Mobile\\Services\\GraphQLApiServices.cs",
+              "RelativeDocumentMoniker": "Services\\GraphQLApiServices.cs",
+              "ToolTip": "C:\\Users\\joel.marini\\Documents\\KG-Mobile\\Services\\GraphQLApiServices.cs",
+              "RelativeToolTip": "Services\\GraphQLApiServices.cs",
+              "ViewState": "AgIAAFEAAAAAAAAAAAAowFwAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-22T04:34:59.877Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "InventoryMoveViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\joel.marini\\Documents\\KG-Mobile\\ViewModels\\01_Inventory\\InventoryMoveViewModel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\01_Inventory\\InventoryMoveViewModel.cs",
+              "ToolTip": "C:\\Users\\joel.marini\\Documents\\KG-Mobile\\ViewModels\\01_Inventory\\InventoryMoveViewModel.cs",
+              "RelativeToolTip": "ViewModels\\01_Inventory\\InventoryMoveViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-22T04:29:58.089Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
