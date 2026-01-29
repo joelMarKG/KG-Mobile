@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KG.Mobile.ViewModels._99_Settings"
+             xmlns:customcontrols="clr-namespace:KG.Mobile.CustomControls"
+             x:Class="KG.Mobile.Views._99_Settings.SettingsPage"
+             Title="Settings">
+
+    <ContentPage.BindingContext>
+        <vm:SettingsViewModel />
+    </ContentPage.BindingContext>
+
+    <ScrollView>
+        <StackLayout Orientation="Vertical" Margin="0,10,0,10" >
+            
+            <!-- Setting WebApiTimeoutSeconds -->
+            <StackLayout Orientation="Vertical" Spacing="0">
+                <Label Text="Web API Timeout (Seconds)"/>
+                <customcontrols:CustomEntry Text="{Binding WebApiTimeoutSeconds}" x:Name="WebApiTimeoutSeconds" FontAttributes="Bold" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False"/>
+            </StackLayout>
+
+            <!-- Disable Popup Keyboard Toggle -->
+            <StackLayout Orientation="Vertical" Spacing="0">
+                <Grid Padding="0">
+                    <Label Text="Disable Popup Keyboard" Grid.ColumnSpan="3"/>
+                    <Switch Grid.Column="4"  IsToggled="{Binding DisablePopupKeyboard}"/>
+                    <Label Grid.Row="1" Grid.ColumnSpan="4" Text="(This page requires a reload)" FontSize="Micro"/>
+                </Grid>
+            </StackLayout>
+
+            <!-- Check Bins for Inventory Before Moving Toggle -->
+            <StackLayout Orientation="Vertical" Spacing="0">
+                <Grid Padding="0">
+                    <Label Text="Check Bins for Inventory Before Moving" Grid.ColumnSpan="3"/>
+                    <Switch Grid.Column="4"  IsToggled="{Binding CheckBinsforInventoryBeforeMoving}"/>
+                    <Label Grid.Row="1" Grid.ColumnSpan="4" Text="(An Error will be displayed if the scanned inventory exists in an Entity with StorageExec.Type=='Bin' before allowing any move operation to be executed)" FontSize="Micro"/>
+                </Grid>
+            </StackLayout>
+
+            <!-- Inventory Auto Move On By Default Toggle -->
+            <StackLayout Orientation="Vertical" Spacing="0">
+                <Grid Padding="0">
+                    <Label Text="Inventory Auto Move On By Default" Grid.ColumnSpan="3"/>
+                    <Switch Grid.Column="4"  IsToggled="{Binding InventoryAutoMoveOnByDefault}"/>
+                    <Label Grid.Row="1" Grid.ColumnSpan="4" Text="(On the Inventory Move Page, is Auto Move on by default after scanning a location)" FontSize="Micro"/>
+                </Grid>
+            </StackLayout>
+
+            <!-- Job Take Out Auto On By Default Toggle -->
+            <StackLayout Orientation="Vertical" Spacing="0">
+                <Grid Padding="0">
+                    <Label Text="Job Take Out Auto On By Default" Grid.ColumnSpan="3"/>
+                    <Switch Grid.Column="4"  IsToggled="{Binding JobTakeOutAutoOnByDefault}"/>
+                    <Label Grid.Row="1" Grid.ColumnSpan="4" Text="(On the Job Takeout Page, is Auto Takeout on by default after scanning a barcode)" FontSize="Micro"/>
+                </Grid>
+            </StackLayout>
+
+            <!-- Location Auto Move On By Default Toggle -->
+            <StackLayout Orientation="Vertical" Spacing="0">
+                <Grid Padding="0">
+                    <Label Text="Location Auto Move On By Default" Grid.ColumnSpan="3"/>
+                    <Switch Grid.Column="4"  IsToggled="{Binding LocationAutoMoveOnByDefault}"/>
+                    <Label Grid.Row="1" Grid.ColumnSpan="4" Text="(On the Location (Trolly) Move Page, is Auto Move on by default after scanning a destination location)" FontSize="Micro"/>
+                </Grid>
+            </StackLayout>
+
+            <!-- Auto Select Entry Field Toggle -->
+            <StackLayout Orientation="Vertical" Spacing="0">
+                <Grid Padding="0">
+                    <Label Text="Auto Select Entry Field" Grid.ColumnSpan="3"/>
+                    <Switch Grid.Column="4"  IsToggled="{Binding AutoSelectEntryField}"/>
+                    <Label Grid.Row="1" Grid.ColumnSpan="4" Text="(Auto select entry fields to reduce screen presses required. Doesn't work all the time and often displays the keyboard even when the disable keyboard popup option is enabled)" FontSize="Micro"/>
+                </Grid>
+            </StackLayout>
+
+            <!-- Defect Auto Move On By Default Toggle -->
+            <StackLayout Orientation="Vertical" Spacing="0">
+                <Grid Padding="0">
+                    <Label Text="Defect Auto Move On By Default" Grid.ColumnSpan="3"/>
+                    <Switch Grid.Column="4"  IsToggled="{Binding QualityMoveAutoOnByDefault}"/>
+                    <Label Grid.Row="1" Grid.ColumnSpan="4" Text="(On the Defect Page, move automatically toggle on by default)" FontSize="Micro"/>
+                </Grid>
+            </StackLayout>
+
+            <!-- Defect Auto Move to Ent -->
+            <!--<StackLayout Orientation="Vertical" Spacing="0">
+                <Label Text="Defect Auto Move to Location"/>
+                <customcontrols:CustomEntry Grid.Column="4" Text="{Binding QualityMoveToEntDefault}"  FontAttributes="Bold" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False"/>
+                <Label Grid.Row="1" Grid.ColumnSpan="4" Text="(On the Defect Page, move automatically to this location when enabled)" FontSize="Micro"/>
+            </StackLayout>-->
+
+            <!-- Setting LocationMoveNames -->
+            <StackLayout Orientation="Vertical" Spacing="0">
+                <Label Text="Location Move Title"/>
+                <customcontrols:CustomEntry Grid.Column="4" Text="{Binding LocationMoveName}" x:Name="LocationMoveName" FontAttributes="Bold" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False"/>
+                <Label Grid.Row="1" Grid.ColumnSpan="4" Text="(The terminoogy used instead of 'Location' for the source entity in the UI. Requires a restart to take effect in the menu.)" FontSize="Micro"/>
+            </StackLayout>
+
+            <!-- Setting JobTakeoutWoAttrName -->
+            <StackLayout Orientation="Vertical" Spacing="0">
+                <Label Text="Job Takeout Wo Attr Name"/>
+                <customcontrols:CustomEntry Grid.Column="4" Text="{Binding JobTakeoutWoAttrName}" x:Name="JobTakeoutWoAttrName" FontAttributes="Bold" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False"/>
+                <Label Grid.Row="1" Grid.ColumnSpan="4" Text="(The Name of the attribute(s) used for storing the Cabinet Barcode against the Work Order, comma delimit multiple entries)" FontSize="Micro"/>
+            </StackLayout>
+
+            <!-- Test Audio Button -->
+            <StackLayout Orientation="Vertical" Spacing="0">
+                <Grid Padding="0">
+                    <Button Text="Test Audio and Vibrate" Command="{Binding TestAudioCommand}" x:Name="TestAudioButton"/>
+                </Grid>
+            </StackLayout>
+
+            <!-- Setting DeviceName -->
+            <StackLayout Orientation="Vertical" Spacing="0">
+                <Label Text="Device Name (for Logging)"/>
+                <customcontrols:CustomEntry Text="{Binding DeviceName}" x:Name="DeviceName" FontAttributes="Bold" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False"/>
+            </StackLayout>
+
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

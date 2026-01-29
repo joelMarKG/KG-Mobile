@@ -1,53 +1,31 @@
-﻿using KG.Mobile.Helpers;
-using Plugin.SimpleAudioPlayer;
-using System;
-using System.IO;
-using System.Reflection;
+﻿using Plugin.Maui.Audio;
 
 namespace KG.Mobile.Services
 {
     public class SoundHelper
     {
-        private readonly ISimpleAudioPlayer player;
+        private readonly IAudioManager _audioManager;
 
-        public SoundHelper()
+        public SoundHelper(IAudioManager audioManager)
         {
-            player = CrossSimpleAudioPlayer.Current;
+            _audioManager = audioManager;
         }
 
-        private void PlaySound(string fileName, int vibrationDurationMs)
+        private async Task PlaySoundAsync(string fileName, int vibrationMs)
         {
-            // Load the audio from embedded resources
-            var assembly = Assembly.GetExecutingAssembly();
-            var resource = $"SBMOM.Mobile.Assets.Sounds.{fileName}"; // Make sure your MP3s are in this folder and marked as EmbeddedResource
+            using var stream = await FileSystem.OpenAppPackageFileAsync(fileName);
+            var player = _audioManager.CreatePlayer(stream);
 
-            using Stream stream = assembly.GetManifestResourceStream(resource);
-            if (stream != null)
+            player.Play();
+
+            if (Vibration.Default.IsSupported)
             {
-                player.Load(stream);
-                player.Play();
+                Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(vibrationMs));
             }
-
-            // Vibrate the device
-            Vibrate.VibrationDuration(vibrationDurationMs);
         }
 
-        // Play the Error sound
-        public void PlayError()
-        {
-            PlaySound("Error.mp3", 2000);
-        }
-
-        // Play the Success sound
-        public void PlaySuccess()
-        {
-            PlaySound("Success.mp3", 500);
-        }
-
-        // Play the Test sound
-        public void PlayTest()
-        {
-            PlaySound("Test.mp3", 4000);
-        }
+        public Task PlayErrorAsync() => PlaySoundAsync("error.mp3", 2000);
+        public Task PlaySuccessAsync() => PlaySoundAsync("success.mp3", 500);
+        public Task PlayTestAsync() => PlaySoundAsync("test.mp3", 4000);
     }
 }

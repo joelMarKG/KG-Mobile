@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KG.Mobile.ViewModels._01_Inventory"
+             xmlns:customcontrols="clr-namespace:KG.Mobile.CustomControls"
+             x:Class="KG.Mobile.Views._01_Inventory.LocationMovePage"
+             Title="">
+
+    <ContentPage.BindingContext>
+        <vm:LocationMoveViewModel />
+    </ContentPage.BindingContext>
+
+    <ScrollView>
+        <StackLayout Orientation="Vertical" 
+                     Spacing="0">
+
+            <!-- Message Text -->
+            <Label Text="{Binding Result}" IsVisible="{Binding ResultMessageVisible}" HorizontalTextAlignment="Center" BackgroundColor="Green" TextColor="White"/>
+            <Label Text="{Binding Result}" IsVisible="{Binding ResultErrorVisible}" HorizontalTextAlignment="Center" BackgroundColor="Red" TextColor="White"/>
+             
+            <!--Location to Move Related -->
+            <Label FontSize="Micro" Text="{Binding LocationToMoveHeading}"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="80*"/>
+                    <ColumnDefinition Width="20*"/>
+                </Grid.ColumnDefinitions>
+                <customcontrols:CustomEntry Text="{Binding LocationName}" x:Name="LocationName" ReturnCommand="{Binding ExecuteLocationBarcode}" FontAttributes="Bold" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False"/>
+                <Button Text="X" Grid.Column="1" Command="{Binding CancelLocation}" x:Name="CancelLocationButton" BackgroundColor="DarkGray" TextColor="Red" WidthRequest="20"/>
+            </Grid>
+
+            <Label FontSize="Micro" Text="Description" x:Name="LocationDescriptionHeading"/>
+            <Label Text="{Binding LocationDescription}" FontAttributes="Bold" x:Name="LocationDescription"/>
+
+            <Label FontSize="Micro" Text="Current Location" x:Name="CurrentLocationHeading"/>
+            <Label Text="{Binding CurrentLocation}" FontAttributes="Bold" x:Name="CurrentLocation"/>
+
+            <Label FontSize="Micro" Text="Current Location Description" x:Name="CurrentLocationDescriptionHeading"/>
+            <Label Text="{Binding CurrentLocationDescription}" FontAttributes="Bold" x:Name="CurrentLocationDescription"/>
+
+            <!-- Spacing -->
+            <Label Text=""/>
+
+            <!-- Auto Move Enable Toggle -->
+            <Grid Padding="2">
+                <Label Text="Auto move to this location" FontSize="Micro" Grid.ColumnSpan="3"/>
+                <Switch Grid.Column="4"  IsToggled="{Binding AutoMoveEnabled}"/>
+            </Grid>
+
+            <!-- Spacing -->
+            <Label Text=""/>
+
+            <!--Move the Above Location To Related -->
+            <Label FontSize="Micro" Text="{Binding MoveLocationToHeading}"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="80*"/>
+                    <ColumnDefinition Width="20*"/>
+                </Grid.ColumnDefinitions>
+                <customcontrols:CustomEntry Text="{Binding MoveToLocationName}" x:Name="MoveToLocationName" ReturnCommand="{Binding ExecuteMoveToLocationBarcode}" FontAttributes="Bold" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False"/>
+                <Button Text="X" Grid.Column="1" Command="{Binding CancelMoveToLocation}" x:Name="CancelMoveToLocationButton" BackgroundColor="DarkGray" TextColor="Red" WidthRequest="20"/>
+            </Grid>
+
+            <Label FontSize="Micro" Text="Move To Location Description" x:Name="MoveToLocationDescriptionHeading"/>
+            <Label Text="{Binding MoveToLocationDescription}" FontAttributes="Bold" x:Name="MoveToLocationDescription"/>
+
+            <!-- Spacing -->
+            <Label Text=""/>
+
+            <!-- Commit Button -->
+            <Button Text="Move" Command="{Binding ProcessMoveCommand}" x:Name="ShipCommandButton" BackgroundColor="DarkGray"/>
+
+        </StackLayout>
+    </ScrollView>  
+</ContentPage>

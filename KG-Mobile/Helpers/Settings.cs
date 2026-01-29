@@ -25,8 +25,8 @@ namespace KG.Mobile.Helpers
         private const string AccessTokenKey = "AccessToken";
         private static readonly string AccessTokenDefault = "";
 
-        private const string GraphQLTimeoutSecondsKey = "GraphQlApiTimeout";
-        private static readonly int GraphQLTimeoutSecondsDefault = 60;
+        private const string GraphQLApiTimeoutSecondsKey = "GraphQlApiTimeout";
+        private static readonly int GraphQLApiTimeoutSecondsDefault = 60;
 
         private const string DisablePopupKeyboardKey = "DisablePopupKeyboard";
         private static readonly bool DisablePopupKeyboardDefault = true;
@@ -98,10 +98,10 @@ namespace KG.Mobile.Helpers
             set => Preferences.Set(AccessTokenKey, value);
         }
 
-        public static int GraphQLTimeoutSeconds
+        public static int GraphQLApiTimeoutSeconds
         {
-            get => Preferences.Get(GraphQLTimeoutSecondsKey, GraphQLTimeoutSecondsDefault);
-            set => Preferences.Set(GraphQLTimeoutSecondsKey, value);
+            get => Preferences.Get(GraphQLApiTimeoutSecondsKey, GraphQLApiTimeoutSecondsDefault);
+            set => Preferences.Set(GraphQLApiTimeoutSecondsKey, value);
         }
 
         public static bool DisablePopupKeyboard

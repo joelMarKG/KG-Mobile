@@ -1,17 +1,23 @@
-﻿using SBMOM.Mobile.Helpers;
-using SBMOM.Mobile.Services;
+﻿using KG.Mobile.Helpers;
+using KG.Mobile.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Input;
-using Xamarin.Forms;
 
-namespace SBMOM.Mobile.ViewModels._99_Settings
+namespace KG.Mobile.ViewModels._99_Settings
 {
 	public class SettingsViewModel : ContentView
 	{
-        private SoundHelper _soundHelper = new SoundHelper();
+        private readonly SoundHelper _soundHelper;
+
+        #region Constructor
+        public SettingsViewModel(SoundHelper soundHelper)
+        {
+            _soundHelper = soundHelper;
+        }
+        #endregion
 
         #region XAML Bound Tags
 
@@ -28,10 +34,10 @@ namespace SBMOM.Mobile.ViewModels._99_Settings
         //WebApiTimeoutSeconds
         public int WebApiTimeoutSeconds
         {
-            get { return Settings.WebApiTimeoutSeconds; }
+            get { return Settings.GraphQLApiTimeoutSeconds; }
             set
             {
-                Settings.WebApiTimeoutSeconds = value;
+                Settings.GraphQLApiTimeoutSeconds = value;
             }
         }
 
@@ -124,7 +130,7 @@ namespace SBMOM.Mobile.ViewModels._99_Settings
                 return new Command(async () =>
                 {
                     //Play the Test sound
-                    _soundHelper.playTest();
+                    _soundHelper.PlayTest();
                 });
             }
 

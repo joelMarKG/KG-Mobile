@@ -4,7 +4,7 @@ using System.Text;
 
 namespace KG.Mobile.Models
 {
-    public class GraphQLResponse
+    public class AuthToken
     {
         public string access_token { get; set; }
         public string token_type { get; set; }

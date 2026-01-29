@@ -1,38 +1,39 @@
-﻿using SBMOM.Mobile.Services;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using KG.Mobile.CustomControls;
+using KG.Mobile.Helpers;
+using KG.Mobile.Models;
+using KG.Mobile.Models.CMMES_GraphQL_Models;
+using KG.Mobile.Services;
+using KG_Data_Access;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net;
-using System.Text;
-using System.Windows.Input;
-using Xamarin.Forms;
-using SBMOM_Data_Access;
-using SBMOM.Mobile.Models;
-using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
-using RestSharp;
+using System.Text;
+using System.Threading.Tasks;
 using System.Web;
-using SBMOM.Mobile.Helpers;
-using SBMOM.Mobile.CustomControls;
+using System.Windows.Input;
 
-namespace SBMOM.Mobile.ViewModels._01_Inventory
+namespace KG.Mobile.ViewModels._01_Inventory
 {
     class LocationMoveViewModel : INotifyPropertyChanged
     {
-        private WebApiServices _webApiServices = new WebApiServices();
-        private WebApiServicesHelper _webApiServicesHelper = new WebApiServicesHelper();
-        private SoundHelper _soundHelper = new SoundHelper();
+        private GraphQLApiServices _graphQLApiServices = new GraphQLApiServices();
+        private GraphQLApiServicesHelper _graphQLApiServicesHelper = new GraphQLApiServicesHelper();
         private MobileDatabase database = MobileDatabase.Instance;
+        private readonly SoundHelper _soundHelper;
 
         //current item inventory and related data
-        private ent ent { get; set; }
-        private ent moveToEnt { get; set; }
+        private Location_CMMES location { get; set; }
+        private Location_CMMES moveToLocation { get; set; }
 
         #region Constructor
-        public LocationMoveViewModel()
+        public LocationMoveViewModel(SoundHelper soundHelper)
         {
             //set the default state for the toggle switch in the UI
             AutoMoveEnabled = Settings.LocationAutoMoveOnByDefault;
+            _soundHelper = soundHelper;
         }
         #endregion
 
@@ -94,7 +95,7 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
                 if (value)
                 {
                     //Play the Error sound
-                    _soundHelper.playError();
+                    _soundHelper.PlayErrorAsync();
                 }
 
                 _ResultErrorVisible = value;
@@ -113,7 +114,7 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
                 if (value)
                 {
                     //Play the Success sound
-                    _soundHelper.playSuccess();
+                    _soundHelper.PlaySuccessAsync();
                 }
 
                 _ResultMessageVisible = value;
@@ -255,7 +256,7 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
                 return new Command(async () =>
                 {
                     //reset values
-                    ent = null;
+                    location = null;
                     LocationDescription = "";
 
                     if (!String.IsNullOrEmpty(LocationName))
@@ -264,32 +265,32 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
                         BusyMessage msg = new BusyMessage(true, "Find " + Settings.LocationMoveName);
                         MessagingCenter.Send(msg, "BusyPopup");
 
-                        ent = await _webApiServicesHelper.EntityGetByEntName(LocationName);
+                        location = await _graphQLApiServicesHelper.LocationGetByLocationName(LocationName);
 
                         //entity found?
-                        if (ent != null)
+                        if (location != null)
                         {
                             //is it a moveable location?
-                            List<storage_exec> se;
-                            se = await _webApiServicesHelper.StorageExecByEntId(ent.ent_id);
+                            Storage_Exec_CMMES se;
+                            se = await _graphQLApiServicesHelper.StorageExecByLocationId(location.LocationId);
 
-                            if (se != null && se.Count > 0)
+                            if (se != null)
                             {
-                                if (se[0].movable)
+                                if (se.Movable[0].Value == "1")
                                 {
-                                    LocationDescription = this.ent.description;
+                                    LocationDescription = this.location.Description;
 
                                     //get the current location
-                                    if (se[0].storage_ent_id == null)
+                                    if (se.LocationStorageDetails[0].LocationId_StoredIn == null)
                                     {
                                         CurrentLocation = "";
                                         CurrentLocationDescription = "";
                                     }
                                     else
                                     {
-                                        ent e = await _webApiServicesHelper.EntityGetByEntId(se[0].storage_ent_id.GetValueOrDefault());
-                                        CurrentLocation = e.ent_name;
-                                        CurrentLocationDescription = e.description;
+                                        Location_CMMES e = await _graphQLApiServicesHelper.LocationGetByLocationId(se.LocationStorageDetails[0].LocationId_StoredIn);
+                                        CurrentLocation = e.Name;
+                                        CurrentLocationDescription = e.Description;
 
                                     }
 
@@ -349,7 +350,7 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
             LocationDescription = "";
             CurrentLocation = "";
             CurrentLocationDescription = "";
-            ent = null;
+            location = null;
 
             MessagingCenter.Send("Show", "LocationMovePage-SetLocationNameFocus");
         }
@@ -362,7 +363,7 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
                 return new Command(async () =>
                 {
                     //reset values
-                    moveToEnt = null;
+                    moveToLocation = null;
                     MoveToLocationDescription = "";
 
                     if (!String.IsNullOrEmpty(MoveToLocationName))
@@ -371,12 +372,12 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
                         BusyMessage msg = new BusyMessage(true, "Find location");
                         MessagingCenter.Send(msg, "BusyPopup");
 
-                        moveToEnt = await _webApiServicesHelper.EntityGetByEntName(MoveToLocationName);
+                        moveToLocation = await _graphQLApiServicesHelper.LocationGetByLocationName(MoveToLocationName);
 
                         //entity found?
-                        if (moveToEnt != null)
+                        if (moveToLocation != null)
                         {                            
-                            MoveToLocationDescription = this.moveToEnt.description;
+                            MoveToLocationDescription = this.moveToLocation.Description;
                             
                             ResultError = false;
                             Result = "Location '" + MoveToLocationName + "' Found";
@@ -417,7 +418,7 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
             //reset related values
             MoveToLocationName = "";
             MoveToLocationDescription = "";
-            moveToEnt = null;
+            moveToLocation = null;
 
             MessagingCenter.Send("Show", "LocationMovePage-SetMoveToLocationNameFocus");
         }    
@@ -437,7 +438,7 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
         async Task MoveLocationWrapper()
         {
             //check that ent and destiantion are populated
-            if (ent != null && moveToEnt != null)
+            if (location != null && moveToLocation != null)
             {
                 //move the location then reset both fields leaving the Move To Location Field selected
                 await MoveLocation();
@@ -445,17 +446,17 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
                 resetLocation();
 
             }
-            else if (ent == null && moveToEnt == null)
+            else if (location == null && moveToLocation == null)
             {
                 ResultError = true;
                 Result = "Nothing selected";
             }
-            else if (ent == null)
+            else if (location == null)
             {
                 ResultError = true;
                 Result = "No " + Settings.LocationMoveName + " to move selected";
             }
-            else if (moveToEnt == null)
+            else if (moveToLocation == null)
             {
                 ResultError = true;
                 Result = "No Location to move to selected";
@@ -465,46 +466,70 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
         async Task MoveLocation()
         {
             //Show Busy
-            BusyMessage msg = new BusyMessage(true, "Moving " + Settings.LocationMoveName);
-            MessagingCenter.Send(msg, "BusyPopup");
-
-            //setup path
-            string path;
-            path = $"/api/inventory/Update?" +
-                $"entId=" + HttpUtility.UrlEncode(ent.ent_id.ToString(), Encoding.UTF8) +
-                $"&storageEntId=" + HttpUtility.UrlEncode(moveToEnt.ent_id.ToString(), Encoding.UTF8);
-
-            //api call
-            object response = await _webApiServices.WebAPICallAsyncRest(RestSharp.Method.PATCH, path);
-
-            //api call threw an error
-            if (response.GetType() == typeof(PopupMessage))
+            WeakReferenceMessenger.Default.Send(new BusyMessage(true, "Shipping Inventory"));
+            try
             {
-                MessagingCenter.Send((PopupMessage)response, "PopupError");
-            }
-            //check if response was ok
-            else
-            {
-                var resp = (IRestResponse)response;
-                if (resp?.StatusCode == HttpStatusCode.OK)
+                // GraphQL mutation to move inventory
+                string mutation = @"
+                    mutation MoveLocation($locationId: ID!, $locationId_StoredIn: ID!) {
+                        inventoryLocationMove(
+                            inventoryLocationMove: { locationId: $locationId, locationId_StoredIn: $locationId_StoredIn }
+                        ) {
+                            locationStorageId
+                            locationId
+                            locationId_StoredIn
+                            locationStorageStateId
+                            data
+                            dateCreated
+                            userCreated
+                            dateUpdated
+                            userUpdated
+                        }
+                    }
+                ";
+
+                // Prepare variables
+                var variables = new
+                {
+                    locationId = location.LocationId,
+                    locationId_StoredIn = moveToLocation.LocationId
+                };
+
+                //api call
+                var response = await _graphQLApiServices.ExecuteAsync<List<LocationStorage_CMMES>>(mutation, variables);
+
+                // Handle errors
+                if (response is PopupMessage popup)
+                {
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return;
+                }
+                //check if response was ok
+                if (response is List<LocationStorage_CMMES> movedLocation && movedLocation.Count > 0)
                 {
                     ResultError = false;
-                    Result = Settings.LocationMoveName + " '" + ent.ent_name + "' moved to '" + moveToEnt.ent_name + "'";
+                    Result = Settings.LocationMoveName + " '" + location.Name + "' moved to '" + moveToLocation.Name + "'";
                 }
                 else
                 {
                     ResultError = true;
-                    Result = "Failed to move " + Settings.LocationMoveName + " '" + ent.ent_name + "' to '" + moveToEnt.ent_name + "'"; 
+                    Result = "Failed to move " + Settings.LocationMoveName + " '" + location.Name + "' to '" + moveToLocation.Name + "'";
 
-                    //Message result back to App.xaml
-                    PopupMessage msg2 = new PopupMessage(Settings.LocationMoveName + " Move Failed", Settings.LocationMoveName + " Move", resp.Content, "Ok");
-                    MessagingCenter.Send(msg2, "PopupError");
+                    var popup2 = new PopupMessage("Location Move Failed", "Location Move", "No response from server", "Ok");
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup2));
                 }
             }
-
-            //Hide Busy
-            msg.visible = false;
-            MessagingCenter.Send(msg, "BusyPopup");
+            catch (Exception ex)
+            {
+                // Catch unexpected exceptions
+                var popup = new PopupMessage("GraphQL Exception", "ItemService", ex.Message, "Ok");
+                WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+            }
+            finally
+            {
+                // Hide Busy
+                WeakReferenceMessenger.Default.Send(new BusyMessage(false, string.Empty));
+            }
         }
         
         //Cancel Current Location

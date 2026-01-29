@@ -1,36 +1,43 @@
-﻿using SBMOM.Mobile.Services;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using KG.Mobile.CustomControls;
+using KG.Mobile.Helpers;
+using KG.Mobile.Models;
+using KG.Mobile.Models.CMMES_GraphQL_Models;
+using KG.Mobile.Services;
+using KG_Data_Access;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net;
-using System.Text;
-using System.Windows.Input;
-using Xamarin.Forms;
-using SBMOM_Data_Access;
-using SBMOM.Mobile.Models;
-using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
-using RestSharp;
+using System.Text;
+using System.Threading.Tasks;
 using System.Web;
-using SBMOM.Mobile.Helpers;
-using SBMOM.Mobile.CustomControls;
+using System.Windows.Input;
 
-namespace SBMOM.Mobile.ViewModels._01_Inventory
+namespace KG.Mobile.ViewModels._01_Inventory
 {
     class InventoryShipViewModel : INotifyPropertyChanged
     {
-        private WebApiServices _webApiServices = new WebApiServices();
-        private WebApiServicesHelper _webApiServicesHelper = new WebApiServicesHelper();
-        private SoundHelper _soundHelper = new SoundHelper();
+        private GraphQLApiServices _graphQLApiServices = new GraphQLApiServices();
+        private GraphQLApiServicesHelper _graphQLApiServicesHelper = new GraphQLApiServicesHelper();
+        private readonly SoundHelper _soundHelper;
         private MobileDatabase database = MobileDatabase.Instance;
 
         //current item inventory and related data
-        private ent ent { get; set; }
+        private Location_CMMES location { get; set; }
+
+        #region Constructor
+        public InventoryShipViewModel(SoundHelper soundHelper)
+        {
+            _soundHelper = soundHelper;
+        }
+        #endregion
 
         #region DataGrid Handling
         //Item Inventory Tags
-        private List<item_inv> _item_inv { get; set; }
-        public List<item_inv> item_inv
+        private List<Lot_CMMES> _item_inv { get; set; }
+        public List<Lot_CMMES> item_inv
         {
             get
             {
@@ -113,7 +120,7 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
                 if (value)
                 {
                     //Play the Error sound
-                    _soundHelper.playError();
+                    _soundHelper.PlayErrorAsync();
                 }
 
                 _ResultErrorVisible = value;
@@ -132,7 +139,7 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
                 if (value)
                 {
                     //Play the Success sound
-                    _soundHelper.playSuccess();
+                    _soundHelper.PlaySuccessAsync();
                 }
 
                 _ResultMessageVisible = value;
@@ -197,7 +204,7 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
                 return new Command(async () =>
                 {
                     //reset values
-                    ent = null;
+                    location = null;
                     LocationDescription = "";
 
                     if (!String.IsNullOrEmpty(LocationName))
@@ -206,18 +213,18 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
                         BusyMessage msg = new BusyMessage(true, "Find location");
                         MessagingCenter.Send(msg, "BusyPopup");
 
-                        ent = await _webApiServicesHelper.EntityGetByEntName(LocationName);
+                        location = await _graphQLApiServicesHelper.LocationGetByLocationName(LocationName);
 
                         //entity found?
-                        if (ent != null)
+                        if (location != null)
                         {
-                            LocationDescription = this.ent.description;
+                            LocationDescription = this.location.Description;
 
                             ResultError = false;
                             Result = "Location '" + LocationName + "' Found";                            
 
                             //query all inventory for the location
-                            item_inv = await _webApiServicesHelper.ItemInvGetByEntId(ent.ent_id);
+                            item_inv = await _graphQLApiServicesHelper.InventoryGetByLocationId(location.LocationId);
                         }
                         else
                         {
@@ -227,7 +234,7 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
                             //reset related values
                             LocationName = "";
                             LocationDescription = "";
-                            ent = null;
+                            location = null;
 
                             MessagingCenter.Send("Show", "InventoryShipPage-SetMoveToLocationNameFocus");
 
@@ -255,7 +262,7 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
                 return new Command(async (Object obj) =>
                 {
                     //check for no inventory or entity
-                    if (ent == null)
+                    if (location == null)
                     {
                         ResultError = true;
                         Result = "No Entity selected";                        
@@ -268,7 +275,7 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
                     else
                     {
                         //Yes No Popup
-                        bool response = await App.Current.MainPage.DisplayAlert("Ship Inventory", "Are you sure you want to ship all inventory in " + ent.ent_name + "?", "Ok", "Cancel");
+                        bool response = await App.Current.MainPage.DisplayAlert("Ship Inventory", "Are you sure you want to ship all inventory in " + location.Name + "?", "Ok", "Cancel");
 
                         //If user responds yes, ship inventory
                         if (response)
@@ -290,55 +297,89 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
         //Ship inventory in ent
         async Task InventoryShip()
         {
+            // Show Busy
+            WeakReferenceMessenger.Default.Send(new BusyMessage(true, "Shipping Inventory"));
 
-            //Show Busy
-            BusyMessage msg = new BusyMessage(true, "Shipping inventory");
-            MessagingCenter.Send(msg, "BusyPopup");
+            // Build list of lots to ship from inventory
+            var inventoryShipPayload = item_inv
+            .Select(lot => new InventoryShipInput_CMMES { LotId = lot.LotId })
+            .ToList();
 
-            //setup path
-            string path;
-            path = $"/api/inventory/shipInventory?" +
-                $"entId=" + HttpUtility.UrlEncode(ent.ent_id.ToString(), Encoding.UTF8);
-            
-            //api call
-            object response = await _webApiServices.WebAPICallAsyncRest(RestSharp.Method.DELETE, path);
-
-            //api call threw an error
-            if (response.GetType() == typeof(PopupMessage))
+            try
             {
-                MessagingCenter.Send((PopupMessage)response, "PopupError");
-            }
-            //check if response was ok
-            else
-            {
-                var resp = (IRestResponse)response;
-                if (resp?.StatusCode == HttpStatusCode.OK)
+                // GraphQL mutation to move inventory
+                string mutation = @"
+                    mutation ShipInventory($inventoryShip: [inventoryShip!]) {
+                        inventoryShip(inventoryShip: $inventoryShip) {
+                            lotId
+                            productId
+                            lotParentId
+                            name
+                            description
+                            lotStateId
+                            lotStatusId
+                            gradeReasonId
+                            purchaseOrderId
+                            quantity
+                            unitOfMeasureId
+                            locationId
+                            data
+                            dateCreated
+                            userCreated
+                            dateUpdated
+                            userUpdated
+                            lotHistoryId
+                        }
+                    }
+                ";
+
+                // Prepare variables
+                var variables = new
+                {
+                    inventoryShip = inventoryShipPayload
+                };
+
+                // Call GraphQL executor
+                var response = await _graphQLApiServices.ExecuteAsync<List<Lot_CMMES>>(mutation, variables);
+
+                // Handle errors
+                if (response is PopupMessage popup)
+                {
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return;
+                }
+
+                // Handle success
+                if (response is List<Lot_CMMES> movedLots && movedLots.Count > 0)
                 {
                     ResultError = false;
-                    Result = "All Inventory Shipped from '" + ent.ent_name + "'";                    
-                    
+                    Result = "All Inventory Shipped from '" + location.Name + "'";
+
                     LocationName = "";
                     LocationDescription = "";
-                    ent = null;
+                    location = null;
                     item_inv = null;
                 }
                 else
                 {
+                    // If response is empty, treat as failure
                     ResultError = true;
-                    Result = "Failed to ship from '" + ent.ent_name + "'";                    
-
-                    //query all inventory for the location
-                    item_inv = await _webApiServicesHelper.ItemInvGetByEntId(ent.ent_id);
-
-                    //Message result back to App.xaml
-                    PopupMessage msg2 = new PopupMessage("Inventory Move Failed", "Inventory Ship", resp.Content, "Ok");
-                    MessagingCenter.Send(msg2, "PopupError");
+                    Result = "Failed to ship from '" + location.LocationId + "'";
+                    var popup2 = new PopupMessage("Inventory Ship Failed", "Inventory Ship", "No response from server", "Ok");
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup2));
                 }
             }
-            
-            //Hide Busy
-            msg.visible = false;
-            MessagingCenter.Send(msg, "BusyPopup");
+            catch (Exception ex)
+            {
+                // Catch unexpected exceptions
+                var popup = new PopupMessage("GraphQL Exception", "ItemService", ex.Message, "Ok");
+                WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+            }
+            finally
+            {
+                // Hide Busy
+                WeakReferenceMessenger.Default.Send(new BusyMessage(false, string.Empty));
+            }
         }
 
         //Cancel Current Location
@@ -351,7 +392,7 @@ namespace SBMOM.Mobile.ViewModels._01_Inventory
                     //reset related values
                     LocationName = "";
                     LocationDescription = "";
-                    ent = null;
+                    location = null;
 
                     //set location name focus
                     if (Settings.AutoSelectEntryField)

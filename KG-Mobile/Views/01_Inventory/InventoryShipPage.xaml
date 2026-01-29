@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KG.Mobile.ViewModels._01_Inventory"
+             xmlns:customcontrols="clr-namespace:KG.Mobile.CustomControls"
+             x:Class="KG.Mobile.Views._01_Inventory.InventoryShipPage"
+             Title="Inventory Ship">
+
+    <ContentPage.BindingContext>
+        <vm:InventoryShipViewModel />
+    </ContentPage.BindingContext>
+
+    <ScrollView>
+        <StackLayout Orientation="Vertical" 
+                     Spacing="0">
+
+            <!-- Message Text -->
+            <Label Text="{Binding Result}" IsVisible="{Binding ResultMessageVisible}" HorizontalTextAlignment="Center" BackgroundColor="Green" TextColor="White"/>
+            <Label Text="{Binding Result}" IsVisible="{Binding ResultErrorVisible}" HorizontalTextAlignment="Center" BackgroundColor="Red" TextColor="White"/>
+             
+            <!-- Ship from Location Related -->
+            <Label FontSize="Micro" Text="Ship from Location Name"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="80*"/>
+                    <ColumnDefinition Width="20*"/>
+                </Grid.ColumnDefinitions>
+                <customcontrols:CustomEntry Text="{Binding LocationName}" x:Name="LocationName" ReturnCommand="{Binding ExecuteLocationBarcode}" FontAttributes="Bold" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False"/>
+                <Button Text="X" Grid.Column="1" Command="{Binding CancelLocation}" CommandParameter="{x:Reference LocationName}" x:Name="CancelLocationButton" BackgroundColor="DarkGray" TextColor="Red" WidthRequest="20"/>
+            </Grid>
+
+            <Label FontSize="Micro" Text="Location Description" x:Name="LocationDescriptionHeading"/>
+            <Label Text="{Binding LocationDescription}" FontAttributes="Bold" x:Name="MoveToLocationDescription"/>
+
+            <!-- Spacing -->
+            <Label Text=""/>            
+
+            <!-- Commit Button -->
+            <Button Text="Ship All" Command="{Binding ProcessShipCommand}" CommandParameter="{x:Reference LocationName}" x:Name="ShipCommandButton" BackgroundColor="DarkGray"/>
+
+            <!-- Spacing -->
+            <Label Text=""/>
+
+            <!-- Inventory Count -->
+            <Label Text="{Binding item_inv_count_message}" FontAttributes="Bold"/>
+            
+            <!-- Data Grid -->
+           <ListView ItemsSource="{Binding item_inv}" 
+                  HeightRequest="1">
+                 <ListView.Header>
+                    <Grid Padding="2">
+                        <Label Text="Item Barcode" FontAttributes="Bold"/>
+                        <Label Grid.Column="1" Text="Item Type" FontAttributes="Bold"/>
+                        <Label Grid.Column="2" Text="Qty" HorizontalTextAlignment="End" FontAttributes="Bold"/>
+                    </Grid>
+                </ListView.Header>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <ViewCell>
+                            <Grid Padding="2">
+                                <Label Text="{Binding lot_no}" FontAttributes="Bold"/>
+                                <Label Grid.Column="1" Text="{Binding item_id}"/>
+                                <Label Grid.Column="2" Text="{Binding qty_left}" HorizontalTextAlignment="End"/>
+                            </Grid>
+                        </ViewCell>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+        </StackLayout>
+    </ScrollView>  
+</ContentPage>

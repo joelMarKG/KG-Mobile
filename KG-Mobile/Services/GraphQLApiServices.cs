@@ -1,6 +1,9 @@
-﻿using KG.Mobile.Helpers;
+﻿using CommunityToolkit.Maui.Views;
+using CommunityToolkit.Mvvm.Messaging;
+using KG.Mobile.Helpers;
 using KG.Mobile.Models;
 using KG.Mobile.Models.GraphQLAPI_Response_Models;
+using StrawberryShake;
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -84,59 +87,6 @@ internal class GraphQLApiServices
         }
     }
 
-    /// <summary>
-    /// Checks if the current bearer token is valid.
-    /// </summary>
-    public async Task LoggedInCheckAsync()
-    {
-        //try
-        //{
-        //    // GraphQL query for user info
-        //    var query = new
-        //    {
-        //        query = @"
-        //            query GetUserInfo {
-        //                userInfo {
-        //                    id
-        //                    username
-        //                    email
-        //                }
-        //            }"
-        //    };
-
-        //    var json = JsonSerializer.Serialize(query);
-        //    var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-        //    var request = new HttpRequestMessage(HttpMethod.Post, Settings.GraphQLApiSecurityUrl);
-        //    request.Content = content;
-        //    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Settings.AccessToken);
-
-        //    var response = await _httpClient.SendAsync(request);
-        //    response.EnsureSuccessStatusCode();
-
-        //    var responseString = await response.Content.ReadAsStringAsync();
-
-        //    // Parse response
-        //    using var doc = JsonDocument.Parse(responseString);
-        //    if (doc.RootElement.TryGetProperty("data", out var dataElement) &&
-        //        dataElement.TryGetProperty("userInfo", out var userInfoElement))
-        //    {
-        //        // Optionally, you can deserialize into a strongly typed object
-        //        var token = new AuthToken();
-        //        MessagingCenter.Send(token, "AlreadyLoggedIn");
-        //    }
-        //}
-        //catch (Exception)
-        //{
-        //    // Ignore errors; will continue to normal login
-        //}
-        //finally
-        //{
-        //    // Hide Busy
-        //    msg.visible = false;
-        //    MessagingCenter.Send(msg, "BusyPopup");
-        //}
-    }
     public async Task<object> ExecuteAsync<T>(
             string queryOrMutation,
             object variables = null)

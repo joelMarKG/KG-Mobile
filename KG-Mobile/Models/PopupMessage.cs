@@ -28,4 +28,14 @@ namespace KG.Mobile.Models
             Popup = popup;
         }
     }
+
+    public class PopupMessageRequest
+    {
+        public PopupMessage Popup { get; }
+
+        public PopupMessageRequest(PopupMessage popup)
+        {
+            Popup = popup;
+        }
+    }
 }

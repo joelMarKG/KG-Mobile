@@ -1,47 +1,44 @@
-﻿using SBMOM.Mobile.Services;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using KG.Mobile.Helpers;
+using KG.Mobile.Models;
+using KG.Mobile.Models.CMMES_GraphQL_Models;
+using KG.Mobile.Services;
+using KG_Data_Access;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Net;
-using System.Text;
-using System.Windows.Input;
-using Xamarin.Forms;
-using SBMOM_Data_Access;
-using SBMOM.Mobile.Models;
-using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
-using RestSharp;
-using System.Web;
-using SBMOM.Mobile.Helpers;
 using System.Linq;
+using System.Net;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web;
+using System.Windows.Input;
 
-namespace SBMOM.Mobile.ViewModels._03_Quality
+namespace KG.Mobile.ViewModels._03_Quality
 {
     class DataLogQualityViewModel : INotifyPropertyChanged
     {
-        private WebApiServices _webApiServices = new WebApiServices();
-        private WebApiServicesHelper _webApiServicesHelper = new WebApiServicesHelper();
-        private SoundHelper _soundHelper = new SoundHelper();
+        private GraphQLApiServices _graphQLApiServices = new GraphQLApiServices();
+        private GraphQLApiServicesHelper _graphQLApiServicesHelper = new GraphQLApiServicesHelper();
+        private readonly SoundHelper _soundHelper;
         private MobileDatabase database = MobileDatabase.Instance;
+
+        private const string defectLotPropertyTypeName = "PreviouslyDefected";
         
-        //data log group names
-        string grpNameDefectTracking = "DefectTracking";
-        string grpNameDefectTrackingReasons = "DefectTrackingReasons";
+        //Grade Reason data
+        List<GradeReason_CMMES> gradeReasons;
 
-        //data log group data
-        List<data_log_grp> grpDefectTracking;
-        List<data_log_grp> grpDefectTrackingReasons;
-
-        //data log defect data
-        List<data_log_16> defectData;
+        //Grade Reason Group data
+        List<GradeReasonGroup_CMMES> gradeReasonGroups;
 
         //lot
-        List<lot> lot;
+        List<Lot_CMMES> lot;
 
         #region constructor
 
         //constructor
-        public DataLogQualityViewModel()
+        public DataLogQualityViewModel(SoundHelper soundHelper)
         {
             //get the group ids for each of the data log groups
             Task.Run(async () => await DataLogQualityViewModelAsync());
@@ -51,24 +48,23 @@ namespace SBMOM.Mobile.ViewModels._03_Quality
             {
                 AutoMoveEnabled = true;
             }
+            _soundHelper = soundHelper;
         }
 
         //async constructor
         public async Task DataLogQualityViewModelAsync()
         {
-            //get the group ids for each of the data log groups
-            grpDefectTracking = await _webApiServicesHelper.DataLogGetByGrpDesc(grpNameDefectTracking);
-            grpDefectTrackingReasons = await _webApiServicesHelper.DataLogGetByGrpDesc(grpNameDefectTrackingReasons);
+
+            gradeReasons = await _graphQLApiServicesHelper.GetGradeReason();
 
             //build the defect level 1 items
-            defectData = await _webApiServicesHelper.GetDataLog16ByGrpId(grpDefectTrackingReasons[0].grp_id.ToString());
+            gradeReasonGroups = await _graphQLApiServicesHelper.GetGradeReasonGroup();
 
-            var xDefectLevel1 = defectData.Select(x => new
+            var xDefectLevel1 = gradeReasonGroups.Select(x => new
             {
-                x.value1,
-                x.value3
+                x.Description,
+                x.GradeReasonGroupId
             })
-            .Where(x => Int32.Parse(x.value3) == 1)
             .Distinct()
             .ToList();
 
@@ -76,7 +72,7 @@ namespace SBMOM.Mobile.ViewModels._03_Quality
 
             foreach (var x in xDefectLevel1)
             {
-                tDefectLevel1.Add(new PickerList(0, x.value1));
+                tDefectLevel1.Add(new PickerList(x.GradeReasonGroupId, x.Description));
             }
 
             DefectLevel1 = tDefectLevel1;
@@ -142,7 +138,7 @@ namespace SBMOM.Mobile.ViewModels._03_Quality
                 if (value)
                 {
                     //Play the Error sound
-                    _soundHelper.playError();
+                    _soundHelper.PlayErrorAsync();
                 }
 
                 _ResultErrorVisible = value;
@@ -162,7 +158,7 @@ namespace SBMOM.Mobile.ViewModels._03_Quality
                 if (value)
                 {
                     //Play the Success sound
-                    _soundHelper.playSuccess();
+                    _soundHelper.PlaySuccessAsync();
                 }
 
                 _ResultMessageVisible = value;
@@ -200,38 +196,39 @@ namespace SBMOM.Mobile.ViewModels._03_Quality
                 //build the defect level 2 items, if item 1 is selected
                 if (DefectLevel1Selected != null)
                 { 
-                    var xDefectLevel2 = defectData.Select(x => new
+                    var xDefectLevel2 = gradeReasons.Select(x => new
                     {
-                        x.row_id,
-                        x.value1,
-                        x.value2
+                        x.Name,
+                        x.GradeReasonGroupId,
+                        x.GradeReasonId
                     })
-                    .Where(x => x.value1 == value.name)
+                    .Where(x => x.GradeReasonGroupId == value.id)
                     .ToList();
 
                     List<PickerList> tDefectLevel2 = new List<PickerList>();
 
                     foreach (var x in xDefectLevel2)
                     {
-                        tDefectLevel2.Add(new PickerList(x.row_id, x.value2));
+                        tDefectLevel2.Add(new PickerList(x.GradeReasonId, x.Name));
                     }
 
                     DefectLevel2 = tDefectLevel2;
 
                     // Get ent_id for defect bin
-                    var xDefectBinEntId = defectData.Select(x => new
+                    var xDefectBinEntId = gradeReasonGroups.Select(x => new
                     {
-                        x.value1,
-                        x.ent_id
+                        x.Name,
+                        x.LocationId,
+                        x.GradeReasonGroupId,
                     })
-                    .Where(x => x.value1 == value.name && x.ent_id != null)
+                    .Where(x => x.GradeReasonGroupId == value.id && x.LocationId != null)
                     .ToList();
 
                     List<PickerList> tDefectBinEntId = new List<PickerList>();
 
                     foreach (var x in xDefectBinEntId)
                     {
-                        tDefectBinEntId.Add(new PickerList(x.ent_id.Value, x.value1));
+                        tDefectBinEntId.Add(new PickerList(x.LocationId, x.Name));
                     }
 
                     DefectBinEntId = tDefectBinEntId.First().id;
@@ -255,8 +252,8 @@ namespace SBMOM.Mobile.ViewModels._03_Quality
         }
 
         //DefectBinEntId Tags
-        private int _DefectBinEntId;
-        public int DefectBinEntId
+        private string _DefectBinEntId;
+        public string DefectBinEntId
         {
             get
             {
@@ -348,7 +345,7 @@ namespace SBMOM.Mobile.ViewModels._03_Quality
                 return new Command(async () =>
                 {
                     //look up the lot
-                    lot = await _webApiServicesHelper.LotGetByLotNo(Barcode);
+                    lot = await _graphQLApiServicesHelper.InventoryGetByLotName(Barcode);
 
                     if ((lot == null) || (lot.Count == 0))
                     {
@@ -374,74 +371,99 @@ namespace SBMOM.Mobile.ViewModels._03_Quality
                 return new Command(async () =>
                 {
                     //Save the current data log quality entry
-                    await AddToDataLog();
+                    await UpdateLotGrade();
                 });
             }
 
         }
 
-        //update the data log
-        async Task AddToDataLog()
+        //change the Lot Grade
+        async Task UpdateLotGrade()
         {
-
             if (DefectLevel2Selected != null && lot != null && lot.Count != 0)
             {
-                //Show Busy
-                BusyMessage msg = new BusyMessage(true, "Adding Quality Record");
-                MessagingCenter.Send(msg, "BusyPopup");
+                WeakReferenceMessenger.Default.Send(new BusyMessage(true, "Grade Reason Update"));
 
-                //setup path
-                string path;
-                path = $"/api/DataLog/DataLog16Add?";
-                path += "grpId=" + HttpUtility.UrlEncode(grpDefectTracking[0].grp_id.ToString(), Encoding.UTF8);
-                path += "&sampleTimeLocal=" + HttpUtility.UrlEncode(System.DateTime.Now.ToString(), Encoding.UTF8);
-                path += "&shiftStartLocal=" + HttpUtility.UrlEncode(System.DateTime.Now.ToString(), Encoding.UTF8);
-                path += "&shiftId=" + HttpUtility.UrlEncode("0", Encoding.UTF8);
-                path += "&value1=" + HttpUtility.UrlEncode(DefectLevel2Selected.id.ToString(), Encoding.UTF8);
-
-                //add lot no to datalog if it has been validated
-                if ((lot != null) && (lot.Count != 0))
+                try
                 {
-                    path += "&lotNo=" + HttpUtility.UrlEncode(Barcode, Encoding.UTF8);
-                }
+                    // GraphQL mutation to move inventory
+                    string mutation = @"
+                    mutation UpdateInventory($lotId: ID!, $gradeReasonId: ID!) {
+                        inventoryUpdate(
+                            inventoryUpdate: { lotId: $lotId, gradeReasonId: $gradeReasonId }
+                        ) {
+                            lotId
+                            productId
+                            lotParentId
+                            name
+                            description
+                            lotStateId
+                            lotStatusId
+                            gradeReasonId
+                            purchaseOrderId
+                            quantity
+                            unitOfMeasureId
+                            locationId
+                            data
+                            dateCreated
+                            userCreated
+                            dateUpdated
+                            userUpdated
+                            lotHistoryId
+                        }
+                    }
+                    ";
 
-                //api call
-                object response = await _webApiServices.WebAPICallAsyncRest(RestSharp.Method.POST, path);
+                    // Prepare variables
+                    var variables = new
+                    {
+                        lotId = lot[0].LotId,
+                        gradeReasonId = DefectLevel2Selected.id
+                    };
 
-                //api call threw an error
-                if (response.GetType() == typeof(PopupMessage))
-                {
-                    MessagingCenter.Send((PopupMessage)response, "PopupError");
-                }
-                //check if response was ok
-                else
-                {
-                    var resp = (IRestResponse)response;
-                    if (resp?.StatusCode == HttpStatusCode.OK)
+                    //api call
+                    var response = await _graphQLApiServices.ExecuteAsync<List<Lot_CMMES>>(mutation, variables);
+
+                    // Handle errors
+                    if (response is PopupMessage popup)
+                    {
+                        WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                        return;
+                    }
+                    //check if response was ok
+                    if (response is List<Lot_CMMES> inventory && inventory.Count > 0)
                     {
                         ResultError = false;
-                        Result =  Barcode + " marked as " + DefectLevel2Selected.name + " at " + DefectLevel1Selected.name;
+                        Result = Barcode + " marked as " + DefectLevel2Selected.name + " at " + DefectLevel1Selected.name;
+
+                        await MarkLotAsDefect();
 
                         //Move the inventory if enabled
                         if (AutoMoveEnabled)
                         {
-                            await MoveInventory();
+                            await MoveInventoryToDefectLocation();
                         }
                     }
                     else
                     {
                         ResultError = true;
-                        Result = "Quality Record Save Failed";
+                        Result = "Lot Grade Update Failed";
 
-                        //Message result back to App.xaml
-                        PopupMessage msg2 = new PopupMessage("Quality Record Save Failed", "Data Log Quality", resp.Content, "Ok");
-                        MessagingCenter.Send(msg2, "PopupError");
+                        var popup2 = new PopupMessage("Lot Grade Update Failed", "Lot Grade Update", "", "Ok");
+                        WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup2));
                     }
                 }
-                
-                //Hide Busy
-                msg.visible = false;
-                MessagingCenter.Send(msg, "BusyPopup");
+                catch (Exception ex)
+                {
+                    // Catch unexpected exceptions
+                    var popup = new PopupMessage("GraphQL Exception", "ItemService", ex.Message, "Ok");
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                }
+                finally
+                {
+                    // Hide Busy
+                    WeakReferenceMessenger.Default.Send(new BusyMessage(false, string.Empty));
+                }
 
                 //reset everything
                 resetBarcode();
@@ -451,107 +473,106 @@ namespace SBMOM.Mobile.ViewModels._03_Quality
                 ResultError = true;
                 Result = "Please select a valid Barcode, Factory Area and Defect Type";
             }
-
         }
 
+
         //Move Inventory API Call
-        async Task MoveInventory()
+        async Task MoveInventoryToDefectLocation()
         {
-            //Show Busy
-            BusyMessage msg = new BusyMessage(true, "Moving Inventory");
-            MessagingCenter.Send(msg, "BusyPopup");
 
-            //get item_inv data from the lot_no
-            List<item_inv> item_inv_list = await _webApiServicesHelper.ItemInvGetByLotNo(lot[0].lot_no);
+            //get location details for where to move the defect too
+            Location_CMMES toDefectLocation = await _graphQLApiServicesHelper.LocationGetByLocationId(DefectBinEntId);
 
-            //check to see if the lot has been created as invetnory yet, potentially it hasn't
-            if (item_inv_list != null && item_inv_list.Count != 0)
+            //confirm the default move to location actually exists.
+            if (toDefectLocation == null)
             {
-                var item_inv = item_inv_list[0];
+                ResultError = true;
+                Result = Barcode + " marked as " + DefectLevel2Selected.name + " at " + DefectLevel1Selected.name;
+                Result += ". Defect Bin not defined for location " + DefectLevel1Selected.name + "!";
 
-                //get ent details for where to move the defect too
-                //ent toEnt = await _webApiServicesHelper.EntityGetByEntName(Settings.QualityMoveToEntDefault);
-                ent toEnt = await _webApiServicesHelper.EntityGetByEntId(DefectBinEntId);
-
-                //confirm the default move to location actually exists.
-                if (toEnt == null)
-                {
-                    ResultError = true;
-                    Result = Barcode + " marked as " + DefectLevel2Selected.name + " at " + DefectLevel1Selected.name;
-                    // Result += ". Default move to location does not exist";
-                    Result += ". Defect Bin not defined for location " + DefectLevel1Selected.name + "!";
-
-                }
-                else
-                {
-                    //get the item details
-                    item item = await _webApiServicesHelper.ItemGetByItemId(item_inv.item_id);
-
-                    //setup path
-                    string path;
-                    path = $"/api/inventory/MoveInventory?" +
-                        $"fromRowId=" + HttpUtility.UrlEncode(item_inv.row_id.ToString(), Encoding.UTF8) +
-                        $"&toEntId=" + HttpUtility.UrlEncode(toEnt.ent_id.ToString(), Encoding.UTF8) +
-                        $"&transferQty=" + HttpUtility.UrlEncode(item_inv.qty_left.ToString(), Encoding.UTF8) +
-                        $"&transferComments=" + "Moved_By_SBMOM.Mobile" +
-                        $"&toItemId=" + HttpUtility.UrlEncode(item_inv.item_id.ToString(), Encoding.UTF8) +
-                        $"&toLotNo=" + HttpUtility.UrlEncode(item_inv.lot_no.ToString(), Encoding.UTF8) +
-                        $"&toGradeCd=" + HttpUtility.UrlEncode(item_inv.grade_cd.ToString(), Encoding.UTF8) +
-                        $"&toStatusCd=" + HttpUtility.UrlEncode(item_inv.status_cd.ToString(), Encoding.UTF8) +
-                        $"&toUomId="; //populated below, based some additional logic
-
-                    //if the item_inv row uom_id is null, then use the item default
-                    if (item_inv.uom_id == null)
-                    {
-                        path += HttpUtility.UrlEncode(item.uom_id.ToString(), Encoding.UTF8);
-                    }
-                    else
-                    {
-                        path += HttpUtility.UrlEncode(item_inv.uom_id.ToString(), Encoding.UTF8);
-                    }
-
-                    //api call
-                    object response = await _webApiServices.WebAPICallAsyncRest(RestSharp.Method.PATCH, path);
-
-                    //api call threw an error
-                    if (response.GetType() == typeof(PopupMessage))
-                    {
-                        MessagingCenter.Send((PopupMessage)response, "PopupError");
-                    }
-                    //check if response was ok
-                    else
-                    {
-                        var resp = (IRestResponse)response;
-                        if (resp?.StatusCode == HttpStatusCode.OK)
-                        {
-                            ResultError = false;
-                            Result = Barcode + " marked as " + DefectLevel2Selected.name + " at " + DefectLevel1Selected.name;
-                            Result += ". " + lot[0].lot_no + " moved to " + toEnt.description;
-                        }
-                        else
-                        {
-                            ResultError = true;
-                            Result = Barcode + " marked as " + DefectLevel2Selected.name + " at " + DefectLevel1Selected.name;
-                            Result += ". " + "Failed to move " + lot[0].lot_no + " to " + toEnt.description;
-
-                            //Message result back to App.xaml
-                            PopupMessage msg2 = new PopupMessage("Inventory Move Failed", "Defect", resp.Content, "Ok");
-                            MessagingCenter.Send(msg2, "PopupError");
-                        }
-                    }
-                }
             }
             else
             {
-                //error to operator when the quality record is saved, but the inventory doesn't exist therefore cannot be moved
+                //api call
+                var response = await _graphQLApiServicesHelper.MoveInventorytoLocationId(lot[0].LotId, lot[0].Quantity, lot[0].UnitOfMeasureId, toDefectLocation.LocationId);
+
+                // Handle errors
+                if (response is null)
+                {
+                    ResultError = true;
+                    Result = Barcode + " marked as " + DefectLevel2Selected.name + " at " + DefectLevel1Selected.name;
+                    Result += ". Failed to move to location " + DefectLevel1Selected.name + " Defect Bin!";
+                    return;
+                }
+                //check if response was ok
+                // Handle success
+                if (response is List<Lot_CMMES> movedLots && movedLots.Count > 0)
+                {
+                    ResultError = false;
+                    Result = Barcode + " marked as " + DefectLevel2Selected.name + " at " + DefectLevel1Selected.name;
+                    Result += ". " + lot[0].Name + " moved to " + toDefectLocation.Description;
+                }
+            }
+        }
+
+        //Mark Lot as Defected.
+        async Task MarkLotAsDefect()
+        {
+
+            //get lotPropertyType using Name 
+            LotPropertyType_CMMES defectLotPropertyType = await _graphQLApiServicesHelper.LotPropertyTypeGetByName(defectLotPropertyTypeName);
+
+            //confirm we have the defect property type information
+            if (defectLotPropertyType == null)
+            {
                 ResultError = true;
-                Result = Barcode + " marked as " + DefectLevel2Selected.name + " at " + DefectLevel1Selected.name;
-                Result += ". " + lot[0].lot_no + " does not exist as inventory and cannot be moved";
+                Result = "Unable to find Lot Property Type with name: " + defectLotPropertyTypeName;
+                return;
             }
 
-            //Hide Busy
-            msg.visible = false;
-            MessagingCenter.Send(msg, "BusyPopup");
+            //See if Previously Defected lotProperty already exists for Lot
+
+            LotProperty_CMMES defectLotProperty = await _graphQLApiServicesHelper.LotPropertyGetByLotIdLotPropertyTypeId(lot[0].LotId, defectLotPropertyType.LotPropertyTypeId);
+
+            //If it Doesn't Exist Create it
+            if (defectLotProperty == null)
+            {
+                LotProperty_CMMES addDefectLotProperty = await _graphQLApiServicesHelper.AddLotProperty(lot[0].LotId, defectLotPropertyType.LotPropertyTypeId, "1");
+
+                if (addDefectLotProperty == null)
+                {
+                    ResultError = true;
+                    Result = "Unable to Create Defect Lot Property for : " + Barcode;
+                    return;
+                }
+                ResultError = false;
+                Result = "Lot " + Barcode + " marked with defect lot property.";
+                return;
+            }
+            //If it does exist and is '0' then update to '1'
+            else if (defectLotProperty != null && defectLotProperty.Value == "0")
+            {
+
+                LotProperty_CMMES updateDefectLotProperty = await _graphQLApiServicesHelper.UpdateLotProperty(lot[0].LotId, defectLotProperty.LotPropertyId, "1");
+
+                if (updateDefectLotProperty == null)
+                {
+                    ResultError = true;
+                    Result = "Unable to Update Defect Lot Property for : " + Barcode;
+                    return;
+                }
+                ResultError = false;
+                Result = "Lot " + Barcode + " updated with defect lot property.";
+                return;
+
+            }
+            //If it does exist and is '1' do nothing.
+            else if (defectLotProperty != null && defectLotProperty.Value == "1")
+            {
+                ResultError = false;
+                Result = "Lot " + Barcode + " already marked with Defect lot property.";
+                return;
+            }
 
         }
 
@@ -574,13 +595,14 @@ namespace SBMOM.Mobile.ViewModels._03_Quality
     //class for the picker data
     class PickerList
     {
-        public int id { get; set; }
+        public string id { get; set; }
         public string name { get; set; }
-
-        public PickerList(int id, string name)
+       // public string gradeReasonGroupId { get; set; }
+        public PickerList(string id, string name)
         {
             this.id = id;
             this.name = name;
+            //this.gradeReasonGroupId = gradeReasonGroupId;
         }
     }
 }

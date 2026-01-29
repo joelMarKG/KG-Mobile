@@ -1,15 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
-using SBMOM_Data_Access;
+using KG_Data_Access;
 using System.Runtime.CompilerServices;
-using SBMOM.Mobile.Helpers;
-using static SBMOM.Mobile.Helpers.MobileDatabase;
+using KG.Mobile.Helpers;
+using static KG.Mobile.Helpers.MobileDatabase;
 using System.Threading.Tasks;
-using Xamarin.Forms;
 using System.Windows.Input;
-using SBMOM.Mobile.Models;
+using KG.Mobile.Models;
 
-namespace SBMOM.Mobile.ViewModels._98_SessionLog
+namespace KG.Mobile.ViewModels._98_SessionLog
 {
     class SessionLogViewModel : INotifyPropertyChanged
     {

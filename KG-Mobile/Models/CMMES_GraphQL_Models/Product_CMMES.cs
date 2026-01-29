@@ -1,5 +1,5 @@
 ﻿
-namespace KG_Mobile.Models.CMMES_GraphQL_Models
+namespace KG.Mobile.Models.CMMES_GraphQL_Models
 {
     public partial class Product_CMMES
     {

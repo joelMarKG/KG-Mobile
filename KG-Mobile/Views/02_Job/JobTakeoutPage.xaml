@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:KG.Mobile.ViewModels._02_Job"
+             xmlns:customcontrols="clr-namespace:KG.Mobile.CustomControls"
+             x:Class="KG.Mobile.Views._02_Job.JobTakeoutPage"
+             Title="Job Takeout">
+
+    <ContentPage.BindingContext>
+        <vm:JobTakeoutViewModel />
+    </ContentPage.BindingContext>
+
+    <ScrollView>
+        <StackLayout Orientation="Vertical" 
+                     Spacing="0">
+
+            <!-- Message Text -->
+            <Label Text="{Binding Result}" IsVisible="{Binding ResultMessageVisible}" HorizontalTextAlignment="Center" BackgroundColor="Green" TextColor="White"/>
+            <Label Text="{Binding Result}" IsVisible="{Binding ResultErrorVisible}" HorizontalTextAlignment="Center" BackgroundColor="Red" TextColor="White"/>
+             
+            <!-- Ship from Location Related -->
+            <Label FontSize="Micro" Text="Barcode"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="80*"/>
+                    <ColumnDefinition Width="20*"/>
+                </Grid.ColumnDefinitions>
+                <customcontrols:CustomEntry Text="{Binding Barcode}" x:Name="Barcode" ReturnCommand="{Binding ExecuteBarcode}" FontAttributes="Bold" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False"/>
+                <Button Text="X" Grid.Column="1" Command="{Binding CancelBarcode}" x:Name="CancelBarcode" BackgroundColor="DarkGray" TextColor="Red" WidthRequest="20"/>
+            </Grid>
+
+            <!-- Spacing -->
+            <Label Text=""/>
+            
+            <!-- Auto Takeout Toggle -->
+            <Grid Padding="2">
+                <Label Text="Auto Takeout" Grid.ColumnSpan="3" FontSize="Micro"/>
+                <Switch Grid.Column="4"  IsToggled="{Binding AutoTakeoutEnabled}"/>
+            </Grid>
+
+            <!-- Spacing -->
+            <Label Text=""/>
+
+            <!-- Commit Button -->
+            <Button Text="Takeout" Command="{Binding ProcessTakeoutCommand}" x:Name="TakeoutCommandButton" BackgroundColor="DarkGray"/>
+
+            <!-- Spacing -->
+            <Label Text=""/>
+
+            <!-- Data Grid -->
+            <ListView ItemsSource="{Binding job}" 
+                  HeightRequest="1">
+                <ListView.Header>
+                    <Grid Padding="2">
+                        <Label Text="Work Order" FontAttributes="Bold"/>
+                        <Label Grid.Column="1" Text="Item Id" FontAttributes="Bold"/>
+                    </Grid>
+                </ListView.Header>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <ViewCell>
+                            <Grid Padding="2">
+                                <Label Text="{Binding wo_id}" FontAttributes="Bold"/>
+                                <Label Grid.Column="1" Text="{Binding item_id}"/>
+                            </Grid>
+                        </ViewCell>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+        </StackLayout>
+    </ScrollView>  
+</ContentPage>

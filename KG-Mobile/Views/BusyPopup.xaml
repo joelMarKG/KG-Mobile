@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    x:Class="KG.Mobile.Views.BusyPopup">
+
+    <Border WidthRequest="250" HeightRequest="150"
+           BackgroundColor="Black"
+           Opacity="0.8"
+           Padding="20"
+           Shadow="False"
+            >
+
+        <Grid>
+            <VerticalStackLayout HorizontalOptions="Center"
+                                 VerticalOptions="Center"
+                                 Spacing="15">
+                <ActivityIndicator IsRunning="True" Color="White" />
+                <Label x:Name="BusyLabel"
+                       Text="Processing..."
+                       TextColor="White"
+                       HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center"/>
+            </VerticalStackLayout>
+        </Grid>
+    </Border>
+</toolkit:Popup>

@@ -1,11 +1,13 @@
-﻿using KG.Mobile.Models;
-using KG_Mobile.Models.CMMES_GraphQL_Models;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using KG.Mobile.Models;
+using KG.Mobile.Models.CMMES_GraphQL_Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
-using CommunityToolkit.Mvvm.Messaging;
+using static SQLite.SQLite3;
 
 namespace KG.Mobile.Services
 {
@@ -14,7 +16,9 @@ namespace KG.Mobile.Services
     {
         private GraphQLApiServices _graphQLApiServices = new GraphQLApiServices();
 
-        //Product Function, GetByProductId
+        #region Queries
+
+        //Product Function, GetByProductName
         public async Task<Product_CMMES?> ProductGetByProductName(string productName)
         {
             try
@@ -50,7 +54,64 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<Product>
+                // Otherwise, cast to List<Product_CMMES>
+                if (response is List<Product_CMMES> product && product.Count > 0)
+                {
+                    return product[0];
+                }
+            }
+            catch (Exception ex)
+            {
+                // Optional: handle unexpected exceptions
+                var popup = new PopupMessage(
+                    "GraphQL Exception",
+                    "ItemService",
+                    ex.Message,
+                    "Ok"
+                );
+                WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+            }
+
+            return null; // default return
+        }
+
+        //Product Function, GetByProductId
+        public async Task<Product_CMMES?> ProductGetByProductId(string productId)
+        {
+            try
+            {
+                // GraphQL query to get product by productId
+                string query = @"
+                query GetItemByName($productId: ID!) {
+                    productByFilter(filter: { $productId: $productId }) {
+                        productId
+                        name
+                        description
+                        unitOfMeasureId
+                        productStateId
+                        productTypeId
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
+                    }
+                }
+                ";
+
+                var variables = new { productId };
+
+                // Call your generic GraphQL executor
+                var response = await _graphQLApiServices.ExecuteAsync<List<Product_CMMES>>(query, variables);
+
+                // Check if response is a PopupMessage (error)
+                if (response is PopupMessage popup)
+                {
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return null;
+                }
+
+                // Otherwise, cast to List<Product_CMMES>
                 if (response is List<Product_CMMES> product && product.Count > 0)
                 {
                     return product[0];
@@ -76,7 +137,7 @@ namespace KG.Mobile.Services
         {
             try
             {
-                // GraphQL query to get product by productName
+                // GraphQL query to get Location by LocationId
                 string query = @"query LocationGetByLocationId($locationId: ID!) {
                     locationByFilter(filter: { locationId: $locationId }) {
                         locationId
@@ -104,7 +165,7 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<Product>
+                // Otherwise, cast to List<Location_CMMES>
                 if (response is List<Location_CMMES> location && location.Count > 0)
                 {
                     return location[0];
@@ -130,8 +191,8 @@ namespace KG.Mobile.Services
         {
             try
             {
-                // GraphQL query to get product by productName
-                string query = @"query LocationGetByLocationId($locationName: String!) {
+                // GraphQL query to get Location by LocationName
+                string query = @"query LocationGetByLocationName($locationName: String!) {
                     locationByFilter(filter: { name: $locationName }) {
                         locationId
                         locationParentId
@@ -158,7 +219,7 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<Product>
+                // Otherwise, cast to List<Location_CMMES>
                 if (response is List<Location_CMMES> location && location.Count > 0)
                 {
                     return location[0];
@@ -178,12 +239,12 @@ namespace KG.Mobile.Services
             return null; // default return
         }
 
-        //____ Function, GetBy___
-        public async Task<Lot_CMMES?> InventoryGetByLocationId(string locationId)
+        //Inventory Function, GetByLocationId
+        public async Task<List<Lot_CMMES?>> InventoryGetByLocationId(string locationId)
         {
             try
             {
-                // GraphQL query to get product by productName
+                // GraphQL query to get Inventory by LocationId
                 string query = @"query InventoryGetByLocationId($locationId: ID!) {
                     lotByFilter(filter: { locationId: $locationId }) {
                         lotId
@@ -219,10 +280,10 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<___>
-                if (response is List<Lot_CMMES> lot && lot.Count > 0)
+                // Otherwise, cast to List<Lot_CMMES>
+                if (response is List<Lot_CMMES> lots && lots.Count > 0)
                 {
-                    return lot[0];
+                    return lots;
                 }
             }
             catch (Exception ex)
@@ -240,19 +301,39 @@ namespace KG.Mobile.Services
             return null; // default return
         }
 
-        //____ Function, GetBy___
-        public async Task<_____?> ___GetBy___(string ____)
+        //Inventory Function, GetByLotName
+        public async Task<List<Lot_CMMES?>> InventoryGetByLotName(string lotName)
         {
             try
             {
-                // GraphQL query to get product by productName
-                string query = @"_____
+                // GraphQL query to get Inventory by LotName
+                string query = @"query InventoryGetByLotName($name: String!) {
+                    lotByFilter(filter: { name: $name }) {
+                        lotId
+                        productId
+                        lotParentId
+                        name
+                        description
+                        lotStateId
+                        lotStatusId
+                        gradeReasonId
+                        purchaseOrderId
+                        quantity
+                        unitOfMeasureId
+                        locationId
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
+                    }
+                }
                  ";
 
-                var variables = new { _____ };
+                var variables = new { lotName };
 
                 // Call your generic GraphQL executor
-                var response = await _graphQLApiServices.ExecuteAsync<List<______>>(query, variables);
+                var response = await _graphQLApiServices.ExecuteAsync<List<Lot_CMMES>>(query, variables);
 
                 // Check if response is a PopupMessage (error)
                 if (response is PopupMessage popup)
@@ -261,10 +342,364 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<___>
-                if (response is List<___> ___ && ___.Count > 0)
+                // Otherwise, cast to List<Lot_CMMES>
+                if (response is List<Lot_CMMES> lot && lot.Count > 0)
                 {
-                    return ___[0];
+                    return lot;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Optional: handle unexpected exceptions
+                var popup = new PopupMessage(
+                    "GraphQL Exception",
+                    "ItemService",
+                    ex.Message,
+                    "Ok"
+                );
+                WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+            }
+
+            return null; // default return
+        }
+
+        //StorageExec Function, GetByLocationId
+        public async Task<Storage_Exec_CMMES?> StorageExecByLocationId(string locationId)
+        {
+            try
+            {
+                // GraphQL query to get Location by LocationId
+                string query = @"query LocationByFilter($locationId: ID!) {
+                    locationByFilter(filter: { locationId: $locationId }) {
+                        locationId
+                        name
+                        type: vLocationPropertyByFilter(filter: { name: ""Type"" }) {
+                            value
+                        }
+                        status: vLocationPropertyByFilter(filter: { name: ""Status"" }) {
+                            value
+                        }
+                        spareint1: vLocationPropertyByFilter(filter: { name: ""StorageExec_spare_int1"" }) {
+                            value
+                        }
+                        spare1: vLocationPropertyByFilter(filter: { name: ""StorageExec_spare1"" }) {
+                            value
+                        }
+                    }
+                    locationStorageDetails: locationStorageByFilter(
+                        filter: { locationId: $locationId }
+                    ) {
+                        locationStorageId
+                        locationId
+                        locationId_StoredIn
+                        locationStorageStateId
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
+                    }
+                }
+                ";
+
+                var variables = new { locationId };
+
+                // Call your generic GraphQL executor
+                var response = await _graphQLApiServices.ExecuteAsync<List<Storage_Exec_CMMES>>(query, variables);
+
+                // Check if response is a PopupMessage (error)
+                if (response is PopupMessage popup)
+                {
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return null;
+                }
+
+                // Otherwise, cast to List<Storage_Exec_CMMES>
+                if (response is List<Storage_Exec_CMMES> storage_exec && storage_exec.Count > 0)
+                {
+                    return storage_exec[0];
+                }
+            }
+            catch (Exception ex)
+            {
+                // Optional: handle unexpected exceptions
+                var popup = new PopupMessage(
+                    "GraphQL Exception",
+                    "ItemService",
+                    ex.Message,
+                    "Ok"
+                );
+                WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+            }
+
+            return null; // default return
+        }
+
+        //LotPropertyType Function, GetByName
+        public async Task<LotPropertyType_CMMES?> LotPropertyTypeGetByName(string lotPropertyTypeName)
+        {
+            try
+            {
+                // GraphQL query to get LotPropertyType by LotPropertyTypeName
+                string query = @"query LotPropertyTypeGetByName($name: String!) {
+                    lotPropertyTypeByFilter(filter: { name: $name }) {
+                        lotPropertyTypeId
+                        name
+                        description
+                        lotPropertyEnumTypeId
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
+                    }
+                }
+                ";
+
+                var variables = new { lotPropertyTypeName };
+
+                // Call your generic GraphQL executor
+                var response = await _graphQLApiServices.ExecuteAsync<List<LotPropertyType_CMMES>>(query, variables);
+
+                // Check if response is a PopupMessage (error)
+                if (response is PopupMessage popup)
+                {
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return null;
+                }
+
+                // Otherwise, cast to List<LotPropertyType_CMMES>
+                if (response is List<LotPropertyType_CMMES> lotPropertyType && lotPropertyType.Count > 0)
+                {
+                    return lotPropertyType[0];
+                }
+            }
+            catch (Exception ex)
+            {
+                // Optional: handle unexpected exceptions
+                var popup = new PopupMessage(
+                    "GraphQL Exception",
+                    "ItemService",
+                    ex.Message,
+                    "Ok"
+                );
+                WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+            }
+
+            return null; // default return
+        }
+
+        //LotProperty Function, GetByLotId and LotPropertyTypeId
+        public async Task<LotProperty_CMMES?> LotPropertyGetByLotIdLotPropertyTypeId(string lotId, string lotPropertyTypeId)
+        {
+            try
+            {
+                // GraphQL query to get LotProperty by LotId and LotPropertyTypeId
+                string query = @"query GetLotProperty($lotId: ID!, $lotPropertyTypeId: ID!) {
+                    lotPropertyByFilter(
+                        filter: { lotId: $lotId, lotPropertyTypeId: $lotPropertyTypeId }
+                    ) {
+                        lotPropertyId
+                        lotId
+                        lotPropertyTypeId
+                        value
+                        lotPropertyEnumId
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
+                    }
+                }
+                ";
+
+                var variables = new {
+                    lotId = lotId,
+                    lotPropertyTypeId = lotPropertyTypeId
+                };
+
+                // Call your generic GraphQL executor
+                var response = await _graphQLApiServices.ExecuteAsync<List<LotProperty_CMMES>>(query, variables);
+
+                // Check if response is a PopupMessage (error)
+                if (response is PopupMessage popup)
+                {
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return null;
+                }
+
+                // Otherwise, cast to List<LotPropertyType_CMMES>
+                if (response is List<LotProperty_CMMES> lotPropertyType && lotPropertyType.Count > 0)
+                {
+                    return lotPropertyType[0];
+                }
+            }
+            catch (Exception ex)
+            {
+                // Optional: handle unexpected exceptions
+                var popup = new PopupMessage(
+                    "GraphQL Exception",
+                    "ItemService",
+                    ex.Message,
+                    "Ok"
+                );
+                WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+            }
+
+            return null; // default return
+        }
+
+        //LocationPropertyType Function, GetByName
+        public async Task<LocationPropertyType_CMMES?> LocationPropertyTypeGetByName(string locationPropertyTypeName)
+        {
+            try
+            {
+                // GraphQL query to get LocationPropertyType by LocationPropertyTypeName
+                string query = @"query LocationPropertyTypeGetByName($name: String!) {
+                    locationPropertyTypeByFilter(filter: { name: $name }) {
+                        locationPropertyTypeId
+                        name
+                        description
+                        locationPropertyEnumTypeId
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
+                    }
+                }
+                ";
+
+                var variables = new { locationPropertyTypeName };
+
+                // Call your generic GraphQL executor
+                var response = await _graphQLApiServices.ExecuteAsync<List<LocationPropertyType_CMMES>>(query, variables);
+
+                // Check if response is a PopupMessage (error)
+                if (response is PopupMessage popup)
+                {
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return null;
+                }
+
+                // Otherwise, cast to List<LocationPropertyType_CMMES>
+                if (response is List<LocationPropertyType_CMMES> locationPropertyType && locationPropertyType.Count > 0)
+                {
+                    return locationPropertyType[0];
+                }
+            }
+            catch (Exception ex)
+            {
+                // Optional: handle unexpected exceptions
+                var popup = new PopupMessage(
+                    "GraphQL Exception",
+                    "ItemService",
+                    ex.Message,
+                    "Ok"
+                );
+                WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+            }
+
+            return null; // default return
+        }
+
+        //LocationPropertyType Function, GetByName
+        public async Task<WorkOrderPropertyType_CMMES?> WorkOrderPropertyTypeGetByName(string workOrderPropertyTypeName)
+        {
+            try
+            {
+                // GraphQL query to get WorkOrderPropertyType by WorkOrderPropertyTypeName
+                string query = @"query WorkOrderPropertyTypeGetByName($name: String!) {
+                    workOrderPropertyTypeByFilter(filter: { name: $name }) {
+                        workOrderPropertyTypeId
+                        name
+                        description
+                        workOrderPropertyEnumTypeId
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
+                    }
+                }
+                ";
+
+                var variables = new { workOrderPropertyTypeName };
+
+                // Call your generic GraphQL executor
+                var response = await _graphQLApiServices.ExecuteAsync<List<WorkOrderPropertyType_CMMES>>(query, variables);
+
+                // Check if response is a PopupMessage (error)
+                if (response is PopupMessage popup)
+                {
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return null;
+                }
+
+                // Otherwise, cast to List<WorkOrderPropertyType_CMMES>
+                if (response is List<WorkOrderPropertyType_CMMES> workOrderPropertyType && workOrderPropertyType.Count > 0)
+                {
+                    return workOrderPropertyType[0];
+                }
+            }
+            catch (Exception ex)
+            {
+                // Optional: handle unexpected exceptions
+                var popup = new PopupMessage(
+                    "GraphQL Exception",
+                    "ItemService",
+                    ex.Message,
+                    "Ok"
+                );
+                WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+            }
+
+            return null; // default return
+        }
+
+        //WorkOrderProperty Function, GetByWokrOrderPropertyTypeId&WorkOrderPropertyValue
+        public async Task<WorkOrderProperty_CMMES?> WorkOrderPropertyGetByWorkOrderPropertyTypeIdWorkOrderPropertyValue(string attrId, string attrValue)
+        {
+            try
+            {
+                // GraphQL query to get WorkOrderProperty by WorkOrderPropertyTypeId and WorkOrderPropertyValue
+                string query = @"query WorkOrderPropertyGetByWorkOrderPropertyTypeIdWorkOrderPropertyValue(
+                    $workOrderPropertyTypeId: ID!
+                    $value: String!
+                ) {
+                    workOrderPropertyByFilter(
+                        filter: { workOrderPropertyTypeId: $workOrderPropertyTypeId, value: $value }
+                    ) {
+                        workOrderPropertyTypeId
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
+                        value
+                        workOrderPropertyEnumId
+                        workOrderId
+                        workOrderPropertyId
+                    }
+                }
+                ";
+
+                var variables = new { attrId, attrValue };
+
+                // Call your generic GraphQL executor
+                var response = await _graphQLApiServices.ExecuteAsync<List<WorkOrderProperty_CMMES>>(query, variables);
+
+                // Check if response is a PopupMessage (error)
+                if (response is PopupMessage popup)
+                {
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return null;
+                }
+
+                // Otherwise, cast to List<WorkOrderProperty_CMMES>
+                if (response is List<WorkOrderProperty_CMMES> workOrderProperty && workOrderProperty.Count > 0)
+                {
+                    return workOrderProperty[0];
                 }
             }
             catch (Exception ex)
@@ -283,272 +718,474 @@ namespace KG.Mobile.Services
         }
 
 
-        //ItemInv Function, GetByLotNo
-        public async Task<List<item_inv>> ItemInvGetByLotNo(string lotNo)
+
+        ////Job Function, GetByWoIdOperId
+        //public async Task<List<job>> JobGetByWoIdOperId(string woId, string operId)
+        //{
+
+        //    //setup path
+        //    string path;
+        //    path = $"/api/Job/GetByWoIdOperId?woId=";
+        //    path += HttpUtility.UrlEncode(woId.ToString(), Encoding.UTF8);
+        //    path += $"&operId=";
+        //    path += HttpUtility.UrlEncode(operId.ToString(), Encoding.UTF8);
+
+        //    //api call
+        //    object response = await _webApiServices.WebAPICallAsyncRest(RestSharp.Method.GET, path, new List<job>());
+
+        //    //api call threw an error
+        //    if (response.GetType() == typeof(PopupMessage))
+        //    {
+        //        MessagingCenter.Send((PopupMessage)response, "PopupError");
+        //    }
+        //    //api call responded with deseralised object
+        //    else if (response.GetType() == typeof(List<job>))
+        //    {
+
+        //        List<job> job = (List<job>)response;
+
+        //        return job;
+        //    }
+
+        //    return null; //default return
+        //}
+
+        ////Job State Function, GetByStateDesc
+        //public async Task<List<job_state>> JobStateGetByStateDesc(string stateDesc)
+        //{
+
+        //    //setup path
+        //    string path;
+        //    path = $"/api/JobState/GetByStateDesc?stateDesc=";
+        //    path += HttpUtility.UrlEncode(stateDesc, Encoding.UTF8);
+
+        //    //api call
+        //    object response = await _webApiServices.WebAPICallAsyncRest(RestSharp.Method.GET, path, new List<job_state>());
+
+        //    //api call threw an error
+        //    if (response.GetType() == typeof(PopupMessage))
+        //    {
+        //        MessagingCenter.Send((PopupMessage)response, "PopupError");
+        //    }
+        //    //api call responded with deseralised object
+        //    else if (response.GetType() == typeof(List<job_state>))
+        //    {
+
+        //        List<job_state> job_state = (List<job_state>)response;
+
+        //        return job_state;
+        //    }
+
+        //    return null; //default return
+        //}
+
+        
+        //GradeReasonGroup Function, GetGradeReasonGroup
+        public async Task<List<GradeReasonGroup_CMMES>> GetGradeReasonGroup()
         {
-
-            //setup path
-            string path;
-            path = $"/api/inventory/getByLotNo?lotNo=";
-            path += HttpUtility.UrlEncode(lotNo, Encoding.UTF8);
-
-            //api call
-            object response = await _webApiServices.WebAPICallAsyncRest(RestSharp.Method.GET, path, new List<item_inv>());
-
-            //api call threw an error
-            if (response.GetType() == typeof(PopupMessage))
+            try
             {
-                MessagingCenter.Send((PopupMessage)response, "PopupError");
-            }
-            //api call responded with deseralised object
-            else if (response.GetType() == typeof(List<item_inv>))
-            {
+                // GraphQL query to get WorkOrderProperty by WorkOrderPropertyTypeId and WorkOrderPropertyValue
+                string query = @"
+                query GetGradeReasonGroup {
+                    gradeReasonGroup {
+                        gradeReasonGroupId
+                        gradeReasonGroupParentId
+                        name
+                        description
+                        locationId
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
+                    }
+                }
+                ";
 
-                List<item_inv> item_inv = (List<item_inv>)response;
-                return item_inv;
-            }
 
-            return null; //default return
-        }
+                // Call your generic GraphQL executor
+                var response = await _graphQLApiServices.ExecuteAsync<List<GradeReasonGroup_CMMES>>(query);
 
-        //StorageExec Function, ByEntId
-        public async Task<List<storage_exec>> StorageExecByEntId(int entId)
-        {
-
-            //setup path
-            string path;
-            path = $"/api/StorageExec/getById?entId=";
-            path += HttpUtility.UrlEncode(entId.ToString(), Encoding.UTF8);
-
-            //api call
-            object response = await _webApiServices.WebAPICallAsyncRest(RestSharp.Method.GET, path, new List<storage_exec>());
-
-            //api call threw an error
-            if (response.GetType() == typeof(PopupMessage))
-            {
-                MessagingCenter.Send((PopupMessage)response, "PopupError");
-            }
-            //api call responded with deseralised object
-            else if (response.GetType() == typeof(List<storage_exec>))
-            {
-
-                List<storage_exec> storage_exec = (List<storage_exec>)response;
-                return storage_exec;
-            }
-
-            return null; //default return
-        }
-
-        //Attr Function, GetAttrDesc
-        public async Task<attr> AttrGetAttrDesc(string attrDesc)
-        {
-
-            //setup path
-            string path;
-            path = $"/api/Attr/getByAttrDesc?AttrDesc=";
-            path += HttpUtility.UrlEncode(attrDesc.ToString(), Encoding.UTF8);
-
-            //api call
-            object response = await _webApiServices.WebAPICallAsyncRest(RestSharp.Method.GET, path, new List<attr>());
-
-            //api call threw an error
-            if (response.GetType() == typeof(PopupMessage))
-            {
-                MessagingCenter.Send((PopupMessage)response, "PopupError");
-            }
-            //api call responded with deseralised object
-            else if (response.GetType() == typeof(List<attr>))
-            {
-
-                List<attr> attr = (List<attr>)response;
-
-                //if attr is found, update the gui
-                if (attr.Count != 0)
+                // Check if response is a PopupMessage (error)
+                if (response is PopupMessage popup)
                 {
-                    return attr[0];
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return null;
+                }
+
+                // Otherwise, cast to List<GradeReasonGroup_CMMES>
+                if (response is List<GradeReasonGroup_CMMES> gradeReasonGroup && gradeReasonGroup.Count > 0)
+                {
+                    return gradeReasonGroup;
                 }
             }
+            catch (Exception ex)
+            {
+                // Optional: handle unexpected exceptions
+                var popup = new PopupMessage(
+                    "GraphQL Exception",
+                    "ItemService",
+                    ex.Message,
+                    "Ok"
+                );
+                WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+            }
 
-            return null; //default return
+            return null; // default return
         }
 
-        //WoAttr Function, GetByAttrIdAttrValue
-        public async Task<List<wo_attr>> WoAttrGetByAttrIdAttrValue(int attrId, string attrValue)
+        //GradeReason Function, GetGradeReason
+        public async Task<List<GradeReason_CMMES>> GetGradeReason()
         {
-
-            //setup path
-            string path;
-            path = $"/api/WoAttr/getByAttrIdAttrValue?AttrId=";
-            path += HttpUtility.UrlEncode(attrId.ToString(), Encoding.UTF8);
-            path += $"&AttrValue=";
-            path += HttpUtility.UrlEncode(attrValue.ToString(), Encoding.UTF8);
-
-            //api call
-            object response = await _webApiServices.WebAPICallAsyncRest(RestSharp.Method.GET, path, new List<wo_attr>());
-
-            //api call threw an error
-            if (response.GetType() == typeof(PopupMessage))
+            try
             {
-                MessagingCenter.Send((PopupMessage)response, "PopupError");
+                // GraphQL query to get Grade Reasons 
+                string query = @"
+                query GetGradeReason {
+                    gradeReason {
+                        gradeReasonId
+                        name
+                        description
+                        gradeReasonGroupId
+                        gradeId
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
+                    }
+                }
+                ";
+
+
+                // Call your generic GraphQL executor
+                var response = await _graphQLApiServices.ExecuteAsync<List<GradeReason_CMMES>>(query);
+
+                // Check if response is a PopupMessage (error)
+                if (response is PopupMessage popup)
+                {
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return null;
+                }
+
+                // Otherwise, cast to List<GradeReason_CMMES>
+                if (response is List<GradeReason_CMMES> gradeReason && gradeReason.Count > 0)
+                {
+                    return gradeReason;
+                }
             }
-            //api call responded with deseralised object
-            else if (response.GetType() == typeof(List<wo_attr>))
+            catch (Exception ex)
             {
-
-                List<wo_attr> wo_attr = (List<wo_attr>)response;
-
-                return wo_attr;
+                // Optional: handle unexpected exceptions
+                var popup = new PopupMessage(
+                    "GraphQL Exception",
+                    "ItemService",
+                    ex.Message,
+                    "Ok"
+                );
+                WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
             }
 
-            return null; //default return
+            return null; // default return
         }
 
-        //Job Function, GetByWoIdOperId
-        public async Task<List<job>> JobGetByWoIdOperId(string woId, string operId)
+        /// <summary>
+        /// Checks if the current bearer token is valid.
+        /// </summary>
+        public async Task LoggedInCheck(string username)
         {
-
-            //setup path
-            string path;
-            path = $"/api/Job/GetByWoIdOperId?woId=";
-            path += HttpUtility.UrlEncode(woId.ToString(), Encoding.UTF8);
-            path += $"&operId=";
-            path += HttpUtility.UrlEncode(operId.ToString(), Encoding.UTF8);
-
-            //api call
-            object response = await _webApiServices.WebAPICallAsyncRest(RestSharp.Method.GET, path, new List<job>());
-
-            //api call threw an error
-            if (response.GetType() == typeof(PopupMessage))
+            try
             {
-                MessagingCenter.Send((PopupMessage)response, "PopupError");
+                // GraphQL query for user info
+                string query = @"
+                query User($username: String!) {
+                    userByFilter(filter: { username: $username }) {
+                        userId
+                        username
+                        name
+                        description
+                        issuedAt
+                        expiresAt
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
+                    }
+                }";
+                var variables = new { username };
+
+                // Call GraphQL executor
+                var response = await _graphQLApiServices.ExecuteAsync<List<User_CMMES>>(query, variables);
+
+                // Handle errors
+                if (response is PopupMessage popup)
+                {
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return;
+                }
+
+                // Otherwise, cast to List<User_CMMES>
+                if (response is List<User_CMMES> user && user.Count > 0)
+                {
+                    if (user[0].expiresAt < DateTime.UtcNow )
+                    {
+                        WeakReferenceMessenger.Default.Send(new PopupMessage("LogIn", "Logged In", "User Already Logged In", "OK"));
+                    }
+                }
             }
-            //api call responded with deseralised object
-            else if (response.GetType() == typeof(List<job>))
+            catch (Exception)
             {
-
-                List<job> job = (List<job>)response;
-
-                return job;
+                // Ignore errors; will continue to normal login
             }
-
-            return null; //default return
+            finally
+            {
+                // Hide Busy
+                WeakReferenceMessenger.Default.Send(new BusyMessage(false, string.Empty));
+            }
         }
 
-        //Job State Function, GetByStateDesc
-        public async Task<List<job_state>> JobStateGetByStateDesc(string stateDesc)
+        //Below has been replaced by InventoryGetByLotName
+        ////Lot Function, GetByLotNo
+        //public async Task<List<lot>> LotGetByLotNo(string lotNo)
+        //{
+
+        //    //setup path
+        //    string path;
+        //    path = $"/api/Lot/GetByLotNo?lotNo=";
+        //    path += HttpUtility.UrlEncode(lotNo, Encoding.UTF8);
+
+        //    //api call
+        //    object response = await _webApiServices.WebAPICallAsyncRest(RestSharp.Method.GET, path, new List<lot>());
+
+        //    //api call threw an error
+        //    if (response.GetType() == typeof(PopupMessage))
+        //    {
+        //        MessagingCenter.Send((PopupMessage)response, "PopupError");
+        //    }
+        //    //api call responded with deseralised object
+        //    else if (response.GetType() == typeof(List<lot>))
+        //    {
+
+        //        List<lot> lot = (List<lot>)response;
+
+        //        return lot;
+        //    }
+
+        //    return null; //default return
+        //}
+        #endregion
+        #region Mutations
+        //Move Inventory To LocationId 
+        public async Task<List<Lot_CMMES?>> MoveInventorytoLocationId(string lotId, decimal quantityToMove, string unitOfMeasureId, string moveToLocationId)
         {
-
-            //setup path
-            string path;
-            path = $"/api/JobState/GetByStateDesc?stateDesc=";
-            path += HttpUtility.UrlEncode(stateDesc, Encoding.UTF8);
-
-            //api call
-            object response = await _webApiServices.WebAPICallAsyncRest(RestSharp.Method.GET, path, new List<job_state>());
-
-            //api call threw an error
-            if (response.GetType() == typeof(PopupMessage))
+            try
             {
-                MessagingCenter.Send((PopupMessage)response, "PopupError");
+                // GraphQL mutation to move inventory
+                string mutation = @"
+                mutation InventoryMove(
+                    $lotId: ID!
+                    $quantityToMove: Float!
+                    $unitOfMeasureId: ID!
+                    $moveToLocationId: ID!
+                ) {
+                    inventoryMove(
+                        inventoryMove: {
+                            lotId: $lotId
+                            quantityToMove: $quantityToMove
+                            unitOfMeasureId: $unitOfMeasureId
+                            moveToLocationId: $moveToLocationId
+                        }
+                    ) {
+                        lotId
+                        productId
+                        lotParentId
+                        name
+                        description
+                        lotStateId
+                        lotStatusId
+                        gradeReasonId
+                        purchaseOrderId
+                        quantity
+                        unitOfMeasureId
+                        locationId
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
+                    }
+                }";
+
+                // Prepare variables
+                var variables = new
+                {
+                    lotId = lotId,
+                    quantityToMove = quantityToMove,
+                    unitOfMeasureId = unitOfMeasureId,
+                    moveToLocationId = moveToLocationId
+                };
+
+                // Call your generic GraphQL executor
+                var response = await _graphQLApiServices.ExecuteAsync<List<Lot_CMMES>>(mutation, variables);
+
+                // Check if response is a PopupMessage (error)
+                if (response is PopupMessage popup)
+                {
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return null;
+                }
+
+                // Otherwise, cast to List<Lot_CMMES>
+                if (response is List<Lot_CMMES> lot && lot.Count > 0)
+                {
+                    return lot;
+                }
             }
-            //api call responded with deseralised object
-            else if (response.GetType() == typeof(List<job_state>))
+            catch (Exception ex)
             {
-
-                List<job_state> job_state = (List<job_state>)response;
-
-                return job_state;
+                // Optional: handle unexpected exceptions
+                var popup = new PopupMessage(
+                    "GraphQL Exception",
+                    "ItemService",
+                    ex.Message,
+                    "Ok"
+                );
+                WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
             }
 
-            return null; //default return
+            return null; // default return
         }
 
-        //DataLog Function, GetByGrpDesc
-        public async Task<List<data_log_grp>> DataLogGetByGrpDesc(string grpDesc)
+        //Add Lot Property
+        public async Task<LotProperty_CMMES?> AddLotProperty(string lotId, string lotPropertyTypeId, string value)
         {
-
-            //setup path
-            string path;
-            path = $"/api/DataLog/GetByGrpDesc?grpDesc=";
-            path += HttpUtility.UrlEncode(grpDesc, Encoding.UTF8);
-
-            //api call
-            object response = await _webApiServices.WebAPICallAsyncRest(RestSharp.Method.GET, path, new List<data_log_grp>());
-
-            //api call threw an error
-            if (response.GetType() == typeof(PopupMessage))
+            try
             {
-                MessagingCenter.Send((PopupMessage)response, "PopupError");
+                // GraphQL mutation to move inventory
+                string mutation = @"
+                mutation AddLotProperty($lotId: ID!, $lotPropertyTypeId: ID!, $value: String!) {
+                    lotPropertyAdd(
+                        lotProperty: { lotId: $lotId, lotPropertyTypeId: $lotPropertyTypeId, value: $value }
+                    ) {
+                        lotPropertyId
+                        lotId
+                        lotPropertyTypeId
+                        value
+                        lotPropertyEnumId
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
+                    }
+                }
+                ";
+
+                // Prepare variables
+                var variables = new
+                {
+                    lotId = lotId,
+                    lotPropertyTypeId = lotPropertyTypeId,
+                    value = value
+                };
+
+                // Call your generic GraphQL executor
+                var response = await _graphQLApiServices.ExecuteAsync<List<LotProperty_CMMES>>(mutation, variables);
+
+                // Check if response is a PopupMessage (error)
+                if (response is PopupMessage popup)
+                {
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return null;
+                }
+
+                // Otherwise, cast to List<LotProperty_CMMES>
+                if (response is List<LotProperty_CMMES> lotProperty && lotProperty.Count > 0)
+                {
+                    return lotProperty[0];
+                }
             }
-            //api call responded with deseralised object
-            else if (response.GetType() == typeof(List<data_log_grp>))
+            catch (Exception ex)
             {
-
-                List<data_log_grp> job_state = (List< data_log_grp>)response;
-
-                return job_state;
+                // Optional: handle unexpected exceptions
+                var popup = new PopupMessage(
+                    "GraphQL Exception",
+                    "ItemService",
+                    ex.Message,
+                    "Ok"
+                );
+                WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
             }
 
-            return null; //default return
+            return null; // default return
         }
 
-        //DataLog Function, GetDataLog16ByGrpId
-        public async Task<List<data_log_16>> GetDataLog16ByGrpId(string grpId)
+        //Update Lot Property
+        public async Task<LotProperty_CMMES?> UpdateLotProperty(string lotId, string lotPropertyId, string value)
         {
-
-            //setup path
-            string path;
-            path = $"/api/DataLog/GetDataLog16ByGrpId?grpId=";
-            path += HttpUtility.UrlEncode(grpId, Encoding.UTF8);
-
-            //api call
-            object response = await _webApiServices.WebAPICallAsyncRest(RestSharp.Method.GET, path, new List<data_log_16>());
-
-            //api call threw an error
-            if (response.GetType() == typeof(PopupMessage))
+            try
             {
-                MessagingCenter.Send((PopupMessage)response, "PopupError");
+                // GraphQL mutation to move inventory
+                string mutation = @"
+                mutation UpdateLotProperty($lotId: ID!, $lotPropertyId: ID!, $value: String!) {
+                    lotPropertyUpdate(
+                        lotProperty: { lotId: $lotId, lotPropertyId: $lotPropertyId, value: $value }
+                    ) {
+                        lotPropertyId
+                        lotId
+                        lotPropertyTypeId
+                        value
+                        lotPropertyEnumId
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
+                    }
+                }
+                ";
+
+                // Prepare variables
+                var variables = new
+                {
+                    lotId = lotId,
+                    lotPropertyId = lotPropertyId,
+                    value = value
+                };
+
+                // Call your generic GraphQL executor
+                var response = await _graphQLApiServices.ExecuteAsync<List<LotProperty_CMMES>>(mutation, variables);
+
+                // Check if response is a PopupMessage (error)
+                if (response is PopupMessage popup)
+                {
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return null;
+                }
+
+                // Otherwise, cast to List<LotProperty_CMMES>
+                if (response is List<LotProperty_CMMES> lotProperty && lotProperty.Count > 0)
+                {
+                    return lotProperty[0];
+                }
             }
-            //api call responded with deseralised object
-            else if (response.GetType() == typeof(List<data_log_16>))
+            catch (Exception ex)
             {
-
-                List<data_log_16> job_state = (List<data_log_16>)response;
-
-                return job_state;
+                // Optional: handle unexpected exceptions
+                var popup = new PopupMessage(
+                    "GraphQL Exception",
+                    "ItemService",
+                    ex.Message,
+                    "Ok"
+                );
+                WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
             }
 
-            return null; //default return
+            return null; // default return
         }
 
-        //Lot Function, GetByLotNo
-        public async Task<List<lot>> LotGetByLotNo(string lotNo)
-        {
-
-            //setup path
-            string path;
-            path = $"/api/Lot/GetByLotNo?lotNo=";
-            path += HttpUtility.UrlEncode(lotNo, Encoding.UTF8);
-
-            //api call
-            object response = await _webApiServices.WebAPICallAsyncRest(RestSharp.Method.GET, path, new List<lot>());
-
-            //api call threw an error
-            if (response.GetType() == typeof(PopupMessage))
-            {
-                MessagingCenter.Send((PopupMessage)response, "PopupError");
-            }
-            //api call responded with deseralised object
-            else if (response.GetType() == typeof(List<lot>))
-            {
-
-                List<lot> lot = (List<lot>)response;
-
-                return lot;
-            }
-
-            return null; //default return
-        }
-
+        #endregion
     }
 }

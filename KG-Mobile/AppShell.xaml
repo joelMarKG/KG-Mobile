@@ -1,14 +1,42 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Shell
-    x:Class="KG.Mobile.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:KG.Mobile"
-    Title="KG.Mobile">
+    xmlns:views="clr-namespace:KG.Mobile.Views._00_Login"
+    xmlns:inventory="clr-namespace:KG.Mobile.Views._01_Inventory"
+    xmlns:job="clr-namespace:KG.Mobile.Views._02_Job"
+    xmlns:quality="clr-namespace:KG.Mobile.Views._03_Quality"
+    xmlns:log="clr-namespace:KG.Mobile.Views._98_SessionLog"
+    xmlns:settings="clr-namespace:KG.Mobile.Views._99_Settings"
+    x:Class="KG.Mobile.AppShell">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <!-- Flyout menu -->
+    <FlyoutItem Title="Inventory" Icon="inventory.png">
+        <ShellContent Title="Move" ContentTemplate="{DataTemplate inventory:InventoryMovePage}" />
+        <ShellContent Title="Ship" ContentTemplate="{DataTemplate inventory:InventoryShipPage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Location" Icon="location.png">
+        <ShellContent Title="Move" ContentTemplate="{DataTemplate inventory:LocationMovePage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Job" Icon="job.png">
+        <ShellContent Title="Takeout" ContentTemplate="{DataTemplate job:JobTakeoutPage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Quality" Icon="quality.png">
+        <ShellContent Title="Data Log" ContentTemplate="{DataTemplate quality:DataLogQualityPage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Settings" Icon="settings.png">
+        <ShellContent Title="Settings" ContentTemplate="{DataTemplate settings:SettingsPage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Session Log" Icon="log.png">
+        <ShellContent Title="Log" ContentTemplate="{DataTemplate log:SessionLogPage}" />
+    </FlyoutItem>
+
+    <MenuItem Text="About" Command="{Binding NavigateCommand}" CommandParameter="AboutPage" IconImageSource="about.png" />
+    <MenuItem Text="Log Out" Command="{Binding LogoutCommand}" IconImageSource="logout.png" />
 
 </Shell>
