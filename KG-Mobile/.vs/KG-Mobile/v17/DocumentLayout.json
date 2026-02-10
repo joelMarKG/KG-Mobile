@@ -1,71 +1,12 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\",
-  "Documents": [
-    {
-      "AbsoluteMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|c:\\users\\joel.marini\\desktop\\kg repos\\kg-mobile\\kg-mobile\\viewmodels\\homeviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|solutionrelative:viewmodels\\homeviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|c:\\users\\joel.marini\\desktop\\kg repos\\kg-mobile\\kg-mobile\\viewmodels\\aboutviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|solutionrelative:viewmodels\\aboutviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|c:\\users\\joel.marini\\desktop\\kg repos\\kg-mobile\\kg-mobile\\viewmodels\\01_inventory\\inventorymoveviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|solutionrelative:viewmodels\\01_inventory\\inventorymoveviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    }
-  ],
+  "Documents": [],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": [
-        {
-          "DockedWidth": 252,
-          "SelectedChildIndex": 0,
-          "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "HomeViewModel.cs",
-              "DocumentMoniker": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\ViewModels\\HomeViewModel.cs",
-              "RelativeDocumentMoniker": "ViewModels\\HomeViewModel.cs",
-              "ToolTip": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\ViewModels\\HomeViewModel.cs",
-              "RelativeToolTip": "ViewModels\\HomeViewModel.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-29T22:06:29.886Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "AboutViewModel.cs",
-              "DocumentMoniker": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\ViewModels\\AboutViewModel.cs",
-              "RelativeDocumentMoniker": "ViewModels\\AboutViewModel.cs",
-              "ToolTip": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\ViewModels\\AboutViewModel.cs",
-              "RelativeToolTip": "ViewModels\\AboutViewModel.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-29T22:06:27.008Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "InventoryMoveViewModel.cs",
-              "DocumentMoniker": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\ViewModels\\01_Inventory\\InventoryMoveViewModel.cs",
-              "RelativeDocumentMoniker": "ViewModels\\01_Inventory\\InventoryMoveViewModel.cs",
-              "ToolTip": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\ViewModels\\01_Inventory\\InventoryMoveViewModel.cs",
-              "RelativeToolTip": "ViewModels\\01_Inventory\\InventoryMoveViewModel.cs",
-              "ViewState": "AgIAABcAAAAAAAAAAAAQwCEAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-29T22:03:12.808Z",
-              "EditorCaption": ""
-            }
-          ]
-        }
-      ]
+      "DocumentGroups": []
     }
   ]
 }

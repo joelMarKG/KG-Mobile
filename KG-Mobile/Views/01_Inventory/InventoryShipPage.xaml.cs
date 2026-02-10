@@ -1,22 +1,22 @@
-﻿
-using KG.Mobile.Helpers;
+﻿using KG.Mobile.Helpers;
+using KG.Mobile.ViewModels._01_Inventory;
 
 namespace KG.Mobile.Views._01_Inventory
 {
 	public partial class InventoryShipPage : ContentPage
 	{
-		public InventoryShipPage()
+		public InventoryShipPage(InventoryShipViewModel viewModel)
 		{
 			InitializeComponent ();
+            BindingContext = viewModel;
 
-            ////Messaging Subscription - Set LocationName Entry Focus
-            //MessagingCenter.Subscribe<string>(this, "InventoryShipPage-SetMoveToLocationNameFocus", (msg) =>
-            //{
-            //    if (Settings.AutoSelectEntryField)
-            //    {
-            //        LocationName.Focus();
-            //    }
-            //});
+            viewModel.RequestLocationFocus += () =>
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    LocationName.Focus();
+                });
+            };
         }
 
         protected async override void OnAppearing()

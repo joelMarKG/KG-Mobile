@@ -1,7 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  
 
 	<PropertyGroup>
-		<TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
+		<TargetFrameworks>net9.0-android;net9.0-ios</TargetFrameworks>
 		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
 		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
 		<!-- <TargetFrameworks>$(TargetFrameworks);net9.0-tizen</TargetFrameworks> -->
@@ -21,11 +22,13 @@
 		<Nullable>enable</Nullable>
 
 		<!-- Display name -->
-		<ApplicationTitle>KG-Mobile</ApplicationTitle>
+		<ApplicationTitle>KG Mobile</ApplicationTitle>
 
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.kgmobile</ApplicationId>
 
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
+    
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
@@ -41,16 +44,23 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <AndroidSigningKeyStore>kgmobile.keystore</AndroidSigningKeyStore>
+    <AndroidSigningStorePass>$(AndroidStorePass)</AndroidSigningStorePass>
+    <AndroidSigningKeyAlias>kgmobile</AndroidSigningKeyAlias>
+    <AndroidSigningKeyPass>$(AndroidKeyPass)</AndroidSigningKeyPass>
+  </PropertyGroup>
+
 	<ItemGroup>
-		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
-
+    
 		<!-- Splash Screen -->
-		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
-
-		<!-- Images -->
+    <MauiSplashScreen Include="Resources\Splash\appsplash.png" Color="#000000" />
+		
+    <!-- Images -->
 		<MauiImage Include="Resources\Images\*" />
-		<MauiImage Update="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185" />
+    
+    <!-- App Icon -->
+    <MauiImage Include="Resources\AppIcon\appicon.png" IsAppIcon="True" />
 		
 		<!-- Custom Fonts -->
 		<MauiFont Include="Resources\Fonts\*" />
@@ -88,9 +98,6 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\01_Inventory\LocationMovePage.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="Views\02_Job\JobTakeoutPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\03_Quality\DataLogQualityPage.xaml">

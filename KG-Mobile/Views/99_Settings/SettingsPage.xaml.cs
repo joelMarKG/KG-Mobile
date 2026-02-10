@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using KG.Mobile.ViewModels._99_Settings;
 
 namespace KG.Mobile.Views._99_Settings
 {
 	public partial class SettingsPage : ContentPage
 	{
-		public SettingsPage ()
+		public SettingsPage (SettingsViewModel viewModel)
 		{
 			InitializeComponent ();
-		}
+            BindingContext = viewModel;
+        }
 	}
 }

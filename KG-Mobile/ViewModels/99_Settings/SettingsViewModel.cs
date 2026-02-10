@@ -1,9 +1,6 @@
 ﻿using KG.Mobile.Helpers;
 using KG.Mobile.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+
 using System.Windows.Input;
 
 namespace KG.Mobile.ViewModels._99_Settings
@@ -130,7 +127,7 @@ namespace KG.Mobile.ViewModels._99_Settings
                 return new Command(async () =>
                 {
                     //Play the Test sound
-                    _soundHelper.PlayTest();
+                    _soundHelper.PlayTestAsync();
                 });
             }
 

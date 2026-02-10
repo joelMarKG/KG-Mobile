@@ -8,6 +8,6 @@ namespace KG.Mobile.Services
     public interface IAppVersion
     {
         string Version();
-        int Build();
+        string Build();
     }
 }

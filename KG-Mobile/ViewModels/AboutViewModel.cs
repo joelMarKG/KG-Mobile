@@ -1,27 +1,17 @@
 ﻿using KG.Mobile.Services;
-using System;
-using System.Windows.Input;
 
 namespace KG.Mobile.ViewModels
 {
-    public class AboutViewModel : ContentView
+    public class AboutViewModel
     {
-        #region XAML Bound Tags
+        private readonly IAppVersion _appVersion;
 
-        //App Version
-        public String Version
+        public AboutViewModel(IAppVersion appVersion)
         {
-            get { return "Version: " + DependencyService.Get<IAppVersion>().Version(); }
+            _appVersion = appVersion;
         }
 
-        //App Version
-        public String BuildNumber
-        {
-            get { return "Build Number: " + DependencyService.Get<IAppVersion>().Build(); }
-        }
-
-        #endregion
+        public string Version => "Version: " + _appVersion.Version();
+        public string BuildNumber => "Build Number: " + _appVersion.Build();
     }
-
-
 }

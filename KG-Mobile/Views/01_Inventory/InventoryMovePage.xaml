@@ -3,12 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KG.Mobile.ViewModels._01_Inventory"
              xmlns:customcontrols="clr-namespace:KG.Mobile.CustomControls"
+             xmlns:behaviors="clr-namespace:KG.Mobile.Behaviors"
              x:Class="KG.Mobile.Views._01_Inventory.InventoryMovePage"
              Title="Inventory Move">
-
-    <ContentPage.BindingContext>
-        <vm:InventoryMoveViewModel />
-    </ContentPage.BindingContext>
 
     <ScrollView>
         <StackLayout Orientation="Vertical" 
@@ -20,7 +17,7 @@
              
             <!-- Move To Location Related -->
             <Label FontSize="Micro" Text="Move to Location Name"/>
-            <Grid>
+            <Grid Padding="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
@@ -28,34 +25,64 @@
                     <ColumnDefinition Width="80*"/>
                     <ColumnDefinition Width="20*"/>
                 </Grid.ColumnDefinitions>
-                <customcontrols:CustomEntry Grid.Column="0" Text="{Binding MoveToLocationName}" x:Name="MoveToLocationName" ReturnCommand="{Binding ExecuteLocationBarcode}" ReturnCommandParameter="{x:Reference ItemBarcode}" FontAttributes="Bold" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False" WidthRequest="80"/>
-                <Button Text="X" Grid.Column="1" Command="{Binding CancelLocation}" CommandParameter="{x:Reference MoveToLocationName}" x:Name="CancelLocationButton" BackgroundColor="DarkGray" TextColor="Red" WidthRequest="20"/>
+                <customcontrols:CustomEntry
+                    Grid.Column="0"
+                    x:Name="MoveToLocationName"
+                    Text="{Binding MoveToLocationName}"
+                    ReturnCommand="{Binding ExecuteLocationBarcode}"
+                    FontAttributes="Bold"
+                    IsTextPredictionEnabled="False"
+                    IsSpellCheckEnabled="False">
+
+                    <customcontrols:CustomEntry.Behaviors>
+                        <behaviors:DisableKeyboardOnFocusBehavior />
+                    </customcontrols:CustomEntry.Behaviors>
+
+                </customcontrols:CustomEntry>
+
+                <Button Text="X" Grid.Column="1" Command="{Binding CancelLocation}" CommandParameter="{x:Reference MoveToLocationName}" x:Name="CancelLocationButton" BackgroundColor="DarkGray" TextColor="Red" WidthRequest="60"/>
             </Grid>           
 
             <Label FontSize="Micro" Text="Move to Location Description" x:Name="MoveToLocationDescriptionHeading"/>
             <Label Text="{Binding MoveToLocationDescription}" FontAttributes="Bold" x:Name="MoveToLocationDescription"/>
 
-            <!-- Spacing -->
-            <Label Text=""/>
 
             <!-- Multi Move Enable Toggle -->
             <Grid Padding="2">
-                <Label Text="Auto move to this location" FontSize="Micro" Grid.ColumnSpan="3"/>
-                <Switch Grid.Column="4"  IsToggled="{Binding MultiMoveEnabled}"/>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="80*"/>
+                    <ColumnDefinition Width="12*"/>
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" Text="Auto move to this location" FontSize="Micro" VerticalTextAlignment="Center"/>
+                <Switch Grid.Column="1"  IsToggled="{Binding MultiMoveEnabled}"/>
             </Grid>
 
-            <!-- Spacing -->
-            <Label Text=""/>
 
-            <!-- Item Related -->
-            <Label FontSize="Micro" Text="Item Barcode"/>
-            <customcontrols:CustomEntry Text="{Binding ItemBarcode}" x:Name="ItemBarcode" ReturnCommand="{Binding ExecuteItemBarcode}" ReturnCommandParameter="{x:Reference ItemBarcode}"  FontAttributes="Bold"  IsTextPredictionEnabled="False" IsSpellCheckEnabled="False"/>
+            <!-- Lot Related -->
+            <Label FontSize="Micro" Text="Lot Barcode"/>
+            <customcontrols:CustomEntry
+                x:Name="LotBarcodeEntry"
+                Text="{Binding LotBarcode}"
+                ReturnCommand="{Binding ExecuteLotBarcode}"
+                FontAttributes="Bold"
+                IsTextPredictionEnabled="False"
+                IsSpellCheckEnabled="False" >
 
-            <Label FontSize="Micro" Text="Item ID"/>
-            <Label Text="{Binding ItemID}" FontAttributes="Bold"/>
+                <customcontrols:CustomEntry.Behaviors>
+                    <behaviors:DisableKeyboardOnFocusBehavior />
+                </customcontrols:CustomEntry.Behaviors>
 
-            <Label FontSize="Micro" Text="Item Description" x:Name="ItemDescriptionHeading"/>
-            <Label Text="{Binding ItemDescription}" FontAttributes="Bold"/>
+            </customcontrols:CustomEntry>
+
+            <!-- Product Related -->
+            <Label FontSize="Micro" Text="Product Name"/>
+            <Label Text="{Binding ProductName}" FontAttributes="Bold"/>
+
+            <Label FontSize="Micro" Text="Product Description" x:Name="ProductDescriptionHeading"/>
+            <Label Text="{Binding ProductDescription}" FontAttributes="Bold"/>
 
             <!-- Current Location Related -->
             <Label FontSize="Micro" Text="Current Location Name" x:Name="CurrentLocationNameHeading"/>
@@ -65,7 +92,10 @@
             <Label Text="{Binding LocationDescription}" FontAttributes="Bold"/>
 
             <!-- Commit Button -->
-            <Button Text="Move" Command="{Binding ProcessMoveCommand}" x:Name="MoveCommandButton" CommandParameter="{x:Reference ItemBarcode}" BackgroundColor="DarkGray"/>
+            <Button Text="Move"
+                    Command="{Binding ProcessMoveCommand}"
+                    x:Name="MoveCommandButton"
+                    BackgroundColor="DarkGray"/>
 
         </StackLayout>
     </ScrollView>  

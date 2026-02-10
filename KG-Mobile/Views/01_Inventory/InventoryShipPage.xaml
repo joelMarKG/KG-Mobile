@@ -3,12 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KG.Mobile.ViewModels._01_Inventory"
              xmlns:customcontrols="clr-namespace:KG.Mobile.CustomControls"
+             xmlns:behaviors="clr-namespace:KG.Mobile.Behaviors"
              x:Class="KG.Mobile.Views._01_Inventory.InventoryShipPage"
              Title="Inventory Ship">
 
-    <ContentPage.BindingContext>
-        <vm:InventoryShipViewModel />
-    </ContentPage.BindingContext>
 
     <ScrollView>
         <StackLayout Orientation="Vertical" 
@@ -20,7 +18,7 @@
              
             <!-- Ship from Location Related -->
             <Label FontSize="Micro" Text="Ship from Location Name"/>
-            <Grid>
+            <Grid Padding="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
@@ -28,8 +26,18 @@
                     <ColumnDefinition Width="80*"/>
                     <ColumnDefinition Width="20*"/>
                 </Grid.ColumnDefinitions>
-                <customcontrols:CustomEntry Text="{Binding LocationName}" x:Name="LocationName" ReturnCommand="{Binding ExecuteLocationBarcode}" FontAttributes="Bold" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False"/>
-                <Button Text="X" Grid.Column="1" Command="{Binding CancelLocation}" CommandParameter="{x:Reference LocationName}" x:Name="CancelLocationButton" BackgroundColor="DarkGray" TextColor="Red" WidthRequest="20"/>
+                <customcontrols:CustomEntry Text="{Binding LocationName}"
+                                            x:Name="LocationName"
+                                            ReturnCommand="{Binding ExecuteLocationBarcode}"
+                                            FontAttributes="Bold"
+                                            IsTextPredictionEnabled="False"
+                                            IsSpellCheckEnabled="False">
+                    <customcontrols:CustomEntry.Behaviors>
+                        <behaviors:DisableKeyboardOnFocusBehavior />
+                    </customcontrols:CustomEntry.Behaviors>
+
+                </customcontrols:CustomEntry>
+                <Button Text="X" Grid.Column="1" Command="{Binding CancelLocation}" CommandParameter="{x:Reference LocationName}" x:Name="CancelLocationButton" BackgroundColor="DarkGray" TextColor="Red" WidthRequest="60"/>
             </Grid>
 
             <Label FontSize="Micro" Text="Location Description" x:Name="LocationDescriptionHeading"/>

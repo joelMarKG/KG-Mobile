@@ -1,58 +1,57 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using KG.Mobile.CustomControls;
 using KG.Mobile.Helpers;
-using KG_Data_Access;
 using KG.Mobile.Models;
 using KG.Mobile.Models.CMMES_GraphQL_Models;
 using KG.Mobile.Services;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Net;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
 using System.Windows.Input;
-using StrawberryShake;
+using System.Diagnostics;
 
 namespace KG.Mobile.ViewModels._01_Inventory
 {
-    class InventoryMoveViewModel : INotifyPropertyChanged
+    public class InventoryMoveViewModel : INotifyPropertyChanged
     {
-        private GraphQLApiServices _graphQLApiServices = new GraphQLApiServices();
-        private GraphQLApiServicesHelper _graphQLApiServicesHelper = new GraphQLApiServicesHelper();
+        private readonly GraphQLApiServicesHelper _graphQLApiServicesHelper;
         private readonly SoundHelper _soundHelper;
-        private MobileDatabase database = MobileDatabase.Instance;
 
-        //current item inventory and related data
+        //current lot inventory and related data
         private Lot_CMMES lot { get; set; }
         private Product_CMMES product { get; set; }
         private Location_CMMES location { get; set; }
         private Location_CMMES toLocation { get; set; }
 
+        public event Action? RequestLotBarcodeFocus;
+        public event Action? RequestLocationFocus;
+
         #region Constructor
-        public InventoryMoveViewModel(SoundHelper soundHelper)
+        public InventoryMoveViewModel(
+            GraphQLApiServicesHelper graphQLApiServicesHelper,
+            SoundHelper soundHelper)
         {
+            _graphQLApiServicesHelper = graphQLApiServicesHelper;
             _soundHelper = soundHelper;
         }
+
         #endregion
 
         #region XAML Bound Tags
-        //Item Barcode Tags
-        private string _ItemBarcode;
-        public string ItemBarcode {
-            get { return _ItemBarcode; }
+        //Lot Barcode Tags
+        private string _LotBarcode;
+        public string LotBarcode {
+            get { return _LotBarcode; }
             set
             {
-                _ItemBarcode = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ItemBarcode"));
+                _LotBarcode = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("LotBarcode"));
 
                 ProductID = "";
+                ProductName = "";
                 ProductDescription = "";
                 LocationName = "";
                 LocationDescription = "";
-                //item_inv = null;
+                //Lot_inv = null;
                 lot = null; 
                 product = null;
                 location = null;
@@ -79,7 +78,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
                         ResultMessageVisible = false;
 
                         //save to log
-                        database.LogAdd(DateTime.Now, "Error", "Inventory Move", value);
+                        WeakReferenceMessenger.Default.Send(new LogMessageRequest(new LogMessage("Error", "Inventory Move",value)));
                     }
                     else
                     {
@@ -87,7 +86,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
                         ResultMessageVisible = true;
 
                         //save to log
-                        database.LogAdd(DateTime.Now, "Info", "Inventory Move", value);
+                        WeakReferenceMessenger.Default.Send(new LogMessageRequest(new LogMessage("Info", "Inventory Move", value)));
                     }
                     
                 }
@@ -143,7 +142,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
         }
 
 
-        //ItemID Tags
+        //ProductID Tags
         private string _ProductID;
         public string ProductID
         {
@@ -154,11 +153,26 @@ namespace KG.Mobile.ViewModels._01_Inventory
             set
             {
                 _ProductID = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ItemID"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ProductID"));
             }
         }
 
-        //ItemDescription Tags
+        //ProductName Tags
+        private string _ProductName;
+        public string ProductName
+        {
+            get
+            {
+                return _ProductName;
+            }
+            set
+            {
+                _ProductName = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ProductName"));
+            }
+        }
+
+        //ProductDescription Tags
         private string _ProductDescription;
         public string ProductDescription
         {
@@ -169,7 +183,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
             set
             {
                 _ProductDescription = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ItemDescription"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ProductDescription"));
             }
         }
 
@@ -252,8 +266,8 @@ namespace KG.Mobile.ViewModels._01_Inventory
 
         #region WebAPI Calls and Commands
 
-        //Command for ItemBarcode Enter key
-        public ICommand ExecuteItemBarcode
+        //Command for LotBarcode Enter key
+        public ICommand ExecuteLotBarcode
         {
             get
             {
@@ -261,15 +275,13 @@ namespace KG.Mobile.ViewModels._01_Inventory
                 {
                     await LoadInventoryData();
 
-                    //select the ItemBarcode Field
+                    //select the LotBarcode Field
                     if (Settings.AutoSelectEntryField)
                     {
-                        var entry = (CustomEntry)obj;
-                        entry.Focus();
+                        RequestLotBarcodeFocus?.Invoke();
                     }
                 });
             }
-
         }
 
         //Command for Location Barcode Enter key
@@ -293,24 +305,44 @@ namespace KG.Mobile.ViewModels._01_Inventory
                         //entity found?
                         if (toLocation != null)
                         {
-                            MoveToLocationDescription = this.toLocation.Description;
-                            ResultError = false;
-                            Result = "";
 
-                            if (Settings.InventoryAutoMoveOnByDefault)
+                            // Verify Valid storage location
+                            StorageExec_CMMES se;
+                            se = await _graphQLApiServicesHelper.StorageExecByLocationId(toLocation.LocationId);
+
+                            if (se != null)
                             {
-                                MultiMoveEnabled = true;
-                            }
+                                if (se.CanStore[0].Value == "1")
+                                {
+                                    MoveToLocationDescription = this.toLocation.Description;
+                                    ResultError = false;
+                                    Result = "";
 
-                            //select the ItemBarcode Field
-                            if (Settings.AutoSelectEntryField)
+                                    if (Settings.InventoryAutoMoveOnByDefault)
+                                    {
+                                        MultiMoveEnabled = true;
+                                    }
+
+                                    //select the LotBarcode Field
+                                    if (Settings.AutoSelectEntryField)
+                                    {
+                                        RequestLotBarcodeFocus?.Invoke();
+                                    }
+
+                                    ResultError = false;
+                                    Result = "Location '" + MoveToLocationName + "' Found";
+                                }
+                                else
+                                {
+                                    ResultError = true;
+                                    Result = "Location '" + MoveToLocationName + "' Not Configured For Storage";
+                                }
+                            }
+                            else
                             {
-                                var entry = (CustomEntry)obj;
-                                entry.Focus();
+                                ResultError = true;
+                                Result = "Location '" + MoveToLocationName + "' Storage Exec Details Not Found";
                             }
-
-                            ResultError = false;
-                            Result = "Location '" + MoveToLocationName + "' Found";
                         }
                         else
                         {
@@ -322,10 +354,11 @@ namespace KG.Mobile.ViewModels._01_Inventory
                             MoveToLocationDescription = "";
                             toLocation = null;
 
+                            RequestLocationFocus?.Invoke();
                             WeakReferenceMessenger.Default.Send(new FocusRequestMessage(FocusTarget.MoveToLocationName));
                         }
                         //Hide Busy
-                        WeakReferenceMessenger.Default.Send(new BusyMessage(false, string.Empty));
+                        WeakReferenceMessenger.Default.Send(new BusyMessage(false, ""));
 
                     }
                     else
@@ -338,12 +371,17 @@ namespace KG.Mobile.ViewModels._01_Inventory
 
         }
 
-        //Populate Item Inventory Data
+        //Populate Lot Inventory Data
         async Task LoadInventoryData()
         {
+            if (AppDebug.IsDebug)
+            {
+                Debug.WriteLine("LoadInventoryData");
+            }
+
             ResultErrorVisible = false;
 
-            if (ItemBarcode != "")
+            if (LotBarcode != "")
             {
                 bool existsInABin = false;
                 Location_CMMES binDetails = new Location_CMMES();
@@ -352,55 +390,46 @@ namespace KG.Mobile.ViewModels._01_Inventory
                 WeakReferenceMessenger.Default.Send(new BusyMessage(true, "Searching for inventory"));
 
                 //api call
-                object response = await _graphQLApiServicesHelper.InventoryGetByLotName(ItemBarcode);
+                object response = await _graphQLApiServicesHelper.InventoryGetByLotName(LotBarcode);
 
                 //api call threw an error
-                if (response.GetType() == typeof(PopupMessage))
+                if (response == null)
                 {
-                    WeakReferenceMessenger.Default.Send((PopupMessage)response, "PopupError");
+                    ResultError = true;
+                    Result = "Not a valid piece of inventory to move";
+                    LotBarcode = "";
                 }
                 //api call responded with deseralised object
-                else if (response.GetType() == typeof(List<Lot_CMMES>))
+                else if (response.GetType() == typeof(Lot_CMMES))
                 {
 
-                    List<Lot_CMMES> lot = (List<Lot_CMMES>)response;
+                    Lot_CMMES lot = (Lot_CMMES)response;
 
-                    //if inventory is found, update the gui
-                    if (lot.Count != 0)
+                    if (lot.Quantity > 0 & lot.LocationId != null)
                     {
-
-                        //handle entites with 0 qty_left follwing a move and clean up on item_inv not completed
-                        foreach (Lot_CMMES i in lot)
+                        //check if this exists in a storage bin, if enabled
+                        if (Settings.CheckBinsforInventoryBeforeMoving && await InventoryBinCheck(lot.LocationId))
                         {
-                            if (i.Quantity > 0 & i.LocationId != "")
-                            {                                
-                                //check if this exists in a storage bin, if enabled
-                                if (Settings.CheckBinsforInventoryBeforeMoving && await InventoryBinCheck(i.LocationId))
-                                {
-                                    existsInABin = true;
+                            existsInABin = true;
 
-                                    //get details for where it is stored
-                                    binDetails = await _graphQLApiServicesHelper.LocationGetByLocationId(i.LocationId);
+                            //get details for where it is stored
+                            binDetails = await _graphQLApiServicesHelper.LocationGetByLocationId(lot.LocationId);
 
-                                    break;
-                                }
-                                    
-                                this.lot = i;
-                            }
                         }
 
+                        this.lot = lot;
                         //Popup Error to user on inventory existing in a bin
                         if (existsInABin)
                         {
                             //Message result back to App.xaml
-                            PopupMessage msg2 = new PopupMessage("Inventory Error", "Inventory Move", "Piece of Inventory found in Storage Bin for Item Barcode = " + ItemBarcode 
+                            PopupMessage msg2 = new PopupMessage("Inventory Error", "Inventory Move", "Piece of Inventory found in Storage Bin for Lot Barcode = " + LotBarcode
                                 + ". Bin Name = " + binDetails.Name
                                 + ". Bin Description = " + binDetails.Description
-                                + ". This piece of Inventory cannot be tracked."
+                                + ". This piece of Inventory cannot be moved."
                                 , "Ok");
-                            WeakReferenceMessenger.Default.Send(msg2, "PopupError");
+                            WeakReferenceMessenger.Default.Send(new PopupErrorMessage(msg2));
 
-                            ItemBarcode = "";
+                            LotBarcode = "";
                         }
                         else
                         {
@@ -409,34 +438,36 @@ namespace KG.Mobile.ViewModels._01_Inventory
                             //update the other UI Values
                             await LoadProductData(this.lot.ProductId);
                             await LoadLocationData(this.lot.LocationId);
+
+                            ResultError = false;
+                            Result = "Found " + LotBarcode + " as Inventory";
                         }
                     }
-                    else //no inventory, does the lot exist but no inventory?
+                    else if (lot.LocationId == null)
+                    //Lot Doesn't exist as inventory yet.
                     {
-                        await LoadLotData();
+                        this.lot = lot;
+                        ProductID = lot.ProductId;
+                        await LoadProductData(lot.ProductId);
+
+                        ResultError = false; 
+                        Result = "Found " + LotBarcode + ". Not Yet Inventory";
                     }
                 }
 
                 //Hide Busy
-                WeakReferenceMessenger.Default.Send(new BusyMessage(false, string.Empty));
+                WeakReferenceMessenger.Default.Send(new BusyMessage(false, ""));
 
-                //Auto move the item if enabled
+                //Auto move the Lot if enabled
                 if (MultiMoveEnabled && !existsInABin)
                 {
                     ResultError = false;
                     Result = "";
 
-                    ////determine if we create or move inventory or specific error to user
-                    //if (toLocation != null && lot.LocationId == null && lot != null)
-                    //{
-                    //    await CreateInventory();
-                    //    ItemBarcode = "";
-                    //}
-                    //else 
                     if(toLocation != null && lot != null)
                     {
                         await MoveInventory();
-                        ItemBarcode = "";
+                        LotBarcode = "";
                     }
                     else if (toLocation == null)
                     {
@@ -447,111 +478,86 @@ namespace KG.Mobile.ViewModels._01_Inventory
                     {
                         ResultError = true;
                         Result = "Not a valid piece of inventory to auto move";
-                        ItemBarcode = "";
+                        LotBarcode = "";
                     }
-
                 }
-
             }
         }
 
-        //Populate Item Description based on ItemId
+        //Populate Product Description based on ProductId
         async Task LoadProductData(string productId)
         {
-
-            //api call
-            object response = await _graphQLApiServicesHelper.ProductGetByProductId(productId);
-
-            //api call threw an error
-            if (response.GetType() == typeof(PopupMessage))
+            if (AppDebug.IsDebug)
             {
-                WeakReferenceMessenger.Default.Send((PopupMessage)response, "PopupError");
+                Debug.WriteLine("LoadProductData using: " + productId);
             }
-            //api call responded with deseralised object
-            else if (response.GetType() == typeof(List<Product_CMMES>))
+
+            var response = await _graphQLApiServicesHelper.ProductGetByProductId(productId);
+
+            if (response is Product_CMMES prod)
             {
-
-                List<Product_CMMES> product = (List<Product_CMMES>)response;
-
-                //if item is found, update the gui
-                if (product.Count != 0)
-                {
-                    this.product = product[0];
-
-                    ProductDescription = this.product.Description;
-                    Result = "";
-                }
-                else
-                {
-                    ResultError = true;
-                    Result = "No Item Data Found";
-                }
+                this.product = prod;
+                ProductDescription = prod.Description;
+                ProductName = prod.Name;
             }
+            else
+            {
+                // fallback if not found
+                this.product = null;
+                ProductDescription = "Product not found";
+                ProductName = "Product not found";
+            }
+
+            Result = "";
         }
+
 
         //Populate LocationName and LocationDescription based on Ent_Id
         async Task LoadLocationData(string locationId)
         {
-
-            //api call
-            object response = await _graphQLApiServicesHelper.LocationGetByLocationId(locationId);
-
-            //api call threw an error
-            if (response.GetType() == typeof(PopupMessage))
+            if (AppDebug.IsDebug)
             {
-                WeakReferenceMessenger.Default.Send((PopupMessage)response, "PopupError");
+                Debug.WriteLine("LoadLocationData using: " + locationId);
             }
-            //api call responded with deseralised object
-            else if (response.GetType() == typeof(List<Location_CMMES>))
+
+            var response = await _graphQLApiServicesHelper.LocationGetByLocationId(locationId);
+
+            if (response is Location_CMMES loc)
             {
-
-                List<Location_CMMES> location= (List<Location_CMMES>)response;
-
-                //iflocationis found, update the gui
-                if (location.Count != 0)
-                {
-                    this.location = location[0];
-
-                    LocationName = this.location.Name;
-                    LocationDescription = this.location.Description;
-                }
-            }         
-        }
-
-        //Populate Item Data from the Lot Definition when no Inventory Exists
-        async Task LoadLotData()
-        {
-            //api call
-            object response = await _graphQLApiServicesHelper.InventoryGetByLotName(ItemBarcode);
-
-            //api call threw an error
-            if (response.GetType() == typeof(PopupMessage))
-            {
-                WeakReferenceMessenger.Default.Send((PopupMessage)response, "PopupError");
+                this.location = loc;
+                LocationName = loc.Name;
+                LocationDescription = loc.Description;
             }
-            //api call responded with deseralised object
-            else if (response.GetType() == typeof(List<Lot_CMMES>))
+            else
             {
-
-                List<Lot_CMMES> lot = (List<Lot_CMMES>)response;
-
-                //if lot is found, update the gui
-                if (lot.Count != 0)
-                { 
-                    this.lot = lot[0];
-                    ProductID = this.lot.ProductId;
-
-                    //update the other UI Values
-                    await LoadProductData(this.lot.ProductId);
-                }
-                else //no lot definition
-                {
-                    ResultError = true;
-                    Result = "Lot Definition for '" + ItemBarcode + "' does not exist";
-                    ItemBarcode = "";
-                }
+                // fallback if not found
+                this.location = null;
+                LocationName = "Unknown";
+                LocationDescription = "";
             }
         }
+
+
+        ////Populate Product Data from the Lot Definition when no Inventory Exists
+        //async Task LoadLotData()
+        //{
+        //    var response = await _graphQLApiServicesHelper.InventoryGetByLotName(LotBarcode);
+
+        //    if (response is Lot_CMMES lotResp)
+        //    {
+        //        this.lot = lotResp;
+        //        ProductID = lotResp.ProductId;
+        //        await LoadProductData(lotResp.ProductId);
+        //    }
+        //    else
+        //    {
+        //        this.lot = null;
+        //        ResultError = true;
+        //        Result = $"Lot Definition for '{LotBarcode}' does not exist";
+        //        LotBarcode = "";
+        //    }
+        //}
+
 
         //Call Move Inventory
         public ICommand ProcessMoveCommand
@@ -563,30 +569,16 @@ namespace KG.Mobile.ViewModels._01_Inventory
                     if(toLocation != null && lot != null)
                     {
                         await MoveInventory();
-                        ItemBarcode = "";
+                        LotBarcode = "";
 
-                        //select the ItemBarcode Field
+                        //select the LotBarcode Field
                         if (Settings.AutoSelectEntryField)
                         {
-                            var entry = (CustomEntry)obj;
-                            entry.Focus();
+                            RequestLotBarcodeFocus?.Invoke();
                         }
 
                     }
-                    //else if(toLocation != null && lot != null)
-                    //{
-                    //    await CreateInventory();
-                    //    ItemBarcode = "";
-
-                    //    //select the ItemBarcode Field
-                    //    if (Settings.AutoSelectEntryField)
-                    //    {
-                    //        var entry = (CustomEntry)obj;
-                    //        entry.Focus();
-                    //    }
-
-                    //}
-                    
+                                       
                 });
             }
 
@@ -595,98 +587,62 @@ namespace KG.Mobile.ViewModels._01_Inventory
         // Move Inventory API Call
         async Task MoveInventory()
         {
-            var response = await _graphQLApiServicesHelper.MoveInventorytoLocationId(lot.LotId, lot.Quantity, lot.UnitOfMeasureId, toLocation.LocationId);
-
-            // Handle errors
-            if (response is null)
+            if (AppDebug.IsDebug)
             {
-                return;
+                Debug.WriteLine("MoveInventory");
             }
+            if (lot.LocationId != toLocation.LocationId)
+            {
 
-            // Handle success
-            if (response is List<Lot_CMMES> movedLots && movedLots.Count > 0)
+                var response = await _graphQLApiServicesHelper.MoveInventorytoLocationId(lot.LotId, lot.Quantity, lot.UnitOfMeasureId, toLocation.LocationId);
+
+                // Handle errors
+                if (response is null)
+                {
+                    return;
+                }
+
+                // Handle success
+                if (response is Lot_CMMES movedLots)
+                {
+                    ResultError = false;
+                    Result = $"{LotBarcode} moved to {toLocation.Description}";
+                }
+            }
+            else if (lot.LocationId == toLocation.LocationId)
             {
                 ResultError = false;
-                Result = $"{ItemBarcode} moved to {toLocation.Description}";
+                Result = $"{LotBarcode} already at location {toLocation.Description}";
             }
         }
-
-        // Dont believe the below is needed anymore.
-        ////Create Inventory API Call
-        //async Task CreateInventory()
-        //{
-        //    //Show Busy
-        //    BusyMessage msg = new BusyMessage(true, "Creating inventory");
-        //    MessagingCenter.Send(msg, "BusyPopup");
-
-        //    //setup path
-        //    string path;
-        //    path = $"/api/inventory/AddInventory?" +
-        //        $"lotNo=" + HttpUtility.UrlEncode(lot.lot_no.ToString(), Encoding.UTF8) +
-        //        $"&entId=" + HttpUtility.UrlEncode(toLocation.ent_id.ToString(), Encoding.UTF8) +
-        //        $"&addQty=" + "1" +
-        //        $"&statusCd=" + HttpUtility.UrlEncode(lot.status_cd.ToString(), Encoding.UTF8) +
-        //        $"&gradeCd=" + HttpUtility.UrlEncode(lot.grade_cd.ToString(), Encoding.UTF8) +
-        //        $"&itemId=" + HttpUtility.UrlEncode(lot.item_id.ToString(), Encoding.UTF8) +
-        //        $"&transferComments=" + "Created_By_SBMOM.Mobile" +
-        //        $"&uomId=" + HttpUtility.UrlEncode(item.uom_id.ToString(), Encoding.UTF8);
-
-        //    //api call
-        //    object response = await _graphQLApiServices.WebAPICallAsyncRest(RestSharp.Method.PUT, path);
-
-        //    //api call threw an error
-        //    if (response.GetType() == typeof(PopupMessage))
-        //    {
-        //        MessagingCenter.Send((PopupMessage)response, "PopupError");
-        //    }
-        //    //check if response was ok
-        //    else
-        //    {
-        //        var resp = (IRestResponse)response;
-        //        if (resp?.StatusCode == HttpStatusCode.Created)
-        //        {
-        //            ResultError = false;
-        //            Result = ItemBarcode + " created at " + toLocation.Description;
-        //        }
-        //        else
-        //        {
-        //            ResultError = true;
-        //            Result = "Failed";
-
-        //            //Message result back to App.xaml
-        //            PopupMessage msg2 = new PopupMessage("Inventory Move Failed", "Inventory Move", resp.Content, "Ok");
-        //            MessagingCenter.Send(msg2, "PopupError");
-        //        }
-        //    }
-
-        //    //Hide Busy
-        //    msg.visible = false;
-        //    MessagingCenter.Send(msg, "BusyPopup");
-
-        //}
 
         //Check if entId is Type == "bin" in storage exec
         async Task<bool> InventoryBinCheck(string locationId)
         {
+            if (AppDebug.IsDebug)
+            {
+                Debug.WriteLine("InventoryBinCheck on: " + locationId);
+            }
+
             //api call
-            object response = await _graphQLApiServicesHelper.StorageExecByLocationId(locationId);
+            var response = await _graphQLApiServicesHelper.StorageExecByLocationId(locationId);
 
             //api call threw an error
-            if (response.GetType() == typeof(PopupMessage))
+            if (response is null)
             {
-                WeakReferenceMessenger.Default.Send((PopupMessage)response, "PopupError");
+                return false;
             }
             //api call responded with deseralised object
-            else if (response.GetType() == typeof(List<Storage_Exec_CMMES>))
+            else if (response.GetType() == typeof(StorageExec_CMMES))
             {
 
-                List<Storage_Exec_CMMES> storage_exec = (List<Storage_Exec_CMMES>)response;
+                StorageExec_CMMES storage_exec = (StorageExec_CMMES)response;
 
-                //if storage_exec row is found
-                if (storage_exec.Count != 0)
+                if (storage_exec != null)
                 {
+
                     //look for type == "bin"
-                    if (storage_exec[0].Type[0].Value == "bin")
+                    if (storage_exec.Type[0].Value == "BIN")
                     {
                         return true;
                     }
@@ -695,7 +651,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
                         return false;
                     }
                 }
-                else //no storage exec definition, assume not a bin
+                else
                 {
                     return false;
                 }
@@ -704,7 +660,6 @@ namespace KG.Mobile.ViewModels._01_Inventory
             return false; //default
 
         }
-
 
         //Cancel Current Location
         public ICommand CancelLocation
@@ -721,8 +676,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
                     //set location name focus
                     if (Settings.AutoSelectEntryField)
                     {
-                        var entry = (CustomEntry)obj;
-                        entry.Focus();
+                        RequestLocationFocus?.Invoke();
                     }
                 });
             }

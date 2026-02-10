@@ -12,7 +12,7 @@ using static SQLite.SQLite3;
 namespace KG.Mobile.Services
 {
     //Helper Class for GraphQLApiServices for common calls
-    class GraphQLApiServicesHelper
+    public class GraphQLApiServicesHelper
     {
         private GraphQLApiServices _graphQLApiServices = new GraphQLApiServices();
 
@@ -25,7 +25,7 @@ namespace KG.Mobile.Services
             {
                 // GraphQL query to get product by productName
                 string query = @"
-                query GetItemByName($productName: String!) {
+                query GetProductByName($productName: String!) {
                     productByFilter(filter: { name: $productName }) {
                         productId
                         name
@@ -82,8 +82,8 @@ namespace KG.Mobile.Services
             {
                 // GraphQL query to get product by productId
                 string query = @"
-                query GetItemByName($productId: ID!) {
-                    productByFilter(filter: { $productId: $productId }) {
+                query GetProductById($productId: ID!) {
+                    productByFilter(filter: { productId: $productId }) {
                         productId
                         name
                         description
@@ -102,7 +102,7 @@ namespace KG.Mobile.Services
                 var variables = new { productId };
 
                 // Call your generic GraphQL executor
-                var response = await _graphQLApiServices.ExecuteAsync<List<Product_CMMES>>(query, variables);
+                var response = await _graphQLApiServices.ExecuteAsync<ProductByFilterResponse>(query, variables);
 
                 // Check if response is a PopupMessage (error)
                 if (response is PopupMessage popup)
@@ -111,10 +111,10 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<Product_CMMES>
-                if (response is List<Product_CMMES> product && product.Count > 0)
+                // Otherwise, cast to ProductByFilterResponse
+                if (response is ProductByFilterResponse product && product.ProductByFilter.Count > 0)
                 {
-                    return product[0];
+                    return product.ProductByFilter[0];
                 }
             }
             catch (Exception ex)
@@ -153,10 +153,10 @@ namespace KG.Mobile.Services
                 }
                 ";
 
-                var variables = new { locationId };
+                var variables = new { locationId = locationId };
 
                 // Call your generic GraphQL executor
-                var response = await _graphQLApiServices.ExecuteAsync<List<Location_CMMES>>(query, variables);
+                var response = await _graphQLApiServices.ExecuteAsync<LocationByFilterResponse>(query, variables);
 
                 // Check if response is a PopupMessage (error)
                 if (response is PopupMessage popup)
@@ -165,10 +165,10 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<Location_CMMES>
-                if (response is List<Location_CMMES> location && location.Count > 0)
+                // Otherwise, cast to LocationByFilterResponse
+                if (response is LocationByFilterResponse location && location.LocationByFilter.Count > 0)
                 {
-                    return location[0];
+                    return location.LocationByFilter[0];
                 }
             }
             catch (Exception ex)
@@ -210,7 +210,7 @@ namespace KG.Mobile.Services
                 var variables = new { locationName };
 
                 // Call your generic GraphQL executor
-                var response = await _graphQLApiServices.ExecuteAsync<List<Location_CMMES>>(query, variables);
+                var response = await _graphQLApiServices.ExecuteAsync<LocationByFilterResponse>(query, variables);
 
                 // Check if response is a PopupMessage (error)
                 if (response is PopupMessage popup)
@@ -219,10 +219,10 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<Location_CMMES>
-                if (response is List<Location_CMMES> location && location.Count > 0)
+                // Otherwise, cast to LocationByFilterResponse
+                if (response is LocationByFilterResponse location && location.LocationByFilter.Count > 0)
                 {
-                    return location[0];
+                    return location.LocationByFilter[0];
                 }
             }
             catch (Exception ex)
@@ -271,7 +271,7 @@ namespace KG.Mobile.Services
                 var variables = new { locationId };
 
                 // Call your generic GraphQL executor
-                var response = await _graphQLApiServices.ExecuteAsync<List<Lot_CMMES>>(query, variables);
+                var response = await _graphQLApiServices.ExecuteAsync<LotByFilterResponse>(query, variables);
 
                 // Check if response is a PopupMessage (error)
                 if (response is PopupMessage popup)
@@ -280,10 +280,10 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<Lot_CMMES>
-                if (response is List<Lot_CMMES> lots && lots.Count > 0)
+                // Otherwise, cast to LotByFilterResponse
+                if (response is LotByFilterResponse lots && lots.LotByFilter.Count > 0)
                 {
-                    return lots;
+                    return lots.LotByFilter;
                 }
             }
             catch (Exception ex)
@@ -302,7 +302,7 @@ namespace KG.Mobile.Services
         }
 
         //Inventory Function, GetByLotName
-        public async Task<List<Lot_CMMES?>> InventoryGetByLotName(string lotName)
+        public async Task<Lot_CMMES?> InventoryGetByLotName(string lotName)
         {
             try
             {
@@ -330,10 +330,10 @@ namespace KG.Mobile.Services
                 }
                  ";
 
-                var variables = new { lotName };
+                var variables = new { name = lotName };
 
                 // Call your generic GraphQL executor
-                var response = await _graphQLApiServices.ExecuteAsync<List<Lot_CMMES>>(query, variables);
+                var response = await _graphQLApiServices.ExecuteAsync<LotByFilterResponse>(query, variables);
 
                 // Check if response is a PopupMessage (error)
                 if (response is PopupMessage popup)
@@ -342,10 +342,10 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<Lot_CMMES>
-                if (response is List<Lot_CMMES> lot && lot.Count > 0)
+                // Otherwise, cast to LotByFilterResponse
+                if (response is LotByFilterResponse lot && lot.LotByFilter.Count > 0)
                 {
-                    return lot;
+                    return lot.LotByFilter[0];
                 }
             }
             catch (Exception ex)
@@ -364,13 +364,13 @@ namespace KG.Mobile.Services
         }
 
         //StorageExec Function, GetByLocationId
-        public async Task<Storage_Exec_CMMES?> StorageExecByLocationId(string locationId)
+        public async Task<StorageExec_CMMES?> StorageExecByLocationId(string locationId)
         {
             try
             {
                 // GraphQL query to get Location by LocationId
-                string query = @"query LocationByFilter($locationId: ID!) {
-                    locationByFilter(filter: { locationId: $locationId }) {
+                string query = @"query StorageExecByLocationId($locationId: ID!) {
+                    StorageExecByFilter: locationByFilter(filter: { locationId: $locationId }) {
                         locationId
                         name
                         type: vLocationPropertyByFilter(filter: { name: ""Type"" }) {
@@ -385,10 +385,60 @@ namespace KG.Mobile.Services
                         spare1: vLocationPropertyByFilter(filter: { name: ""StorageExec_spare1"" }) {
                             value
                         }
+                        movable: vLocationPropertyByFilter(filter: { name: ""Movable"" }) {
+                            value
+                        }
+                        canStore: vLocationPropertyByFilter(filter: { name: ""CanStore"" }) {
+                            value
+                        }
+                        canShip: vLocationPropertyByFilter(filter: { name: ""CanShip"" }) {
+                            value
+                        }
                     }
-                    locationStorageDetails: locationStorageByFilter(
-                        filter: { locationId: $locationId }
-                    ) {
+                }
+                ";
+
+                var variables = new { locationId = locationId };
+
+                // Call your generic GraphQL executor
+                var response = await _graphQLApiServices.ExecuteAsync<StorageExecByFilterResponse>(query, variables);
+
+                // Check if response is a PopupMessage (error)
+                if (response is PopupMessage popup)
+                {
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return null;
+                }
+
+                // Otherwise, cast to StorageExecByFilterResponse
+                if (response is StorageExecByFilterResponse storage_exec && storage_exec.StorageExecByFilter.Count > 0)
+                {
+                    return storage_exec.StorageExecByFilter[0];
+                }
+            }
+            catch (Exception ex)
+            {
+                // Optional: handle unexpected exceptions
+                var popup = new PopupMessage(
+                    "GraphQL Exception",
+                    "ItemService",
+                    ex.Message,
+                    "Ok"
+                );
+                WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+            }
+
+            return null; // default return
+        }
+
+        //LocationStorage Function, GetByLocationId
+        public async Task<LocationStorage_CMMES?> LocationStorageByLocationId(string locationId)
+        {
+            try
+            {
+                // GraphQL query to get Location by LocationId
+                string query = @"query LocationStorageByFilter($locationId: ID!) {
+                    locationStorageByFilter(filter: { locationId: $locationId }) {
                         locationStorageId
                         locationId
                         locationId_StoredIn
@@ -405,7 +455,7 @@ namespace KG.Mobile.Services
                 var variables = new { locationId };
 
                 // Call your generic GraphQL executor
-                var response = await _graphQLApiServices.ExecuteAsync<List<Storage_Exec_CMMES>>(query, variables);
+                var response = await _graphQLApiServices.ExecuteAsync<LocationStorageByFilterResponse>(query, variables);
 
                 // Check if response is a PopupMessage (error)
                 if (response is PopupMessage popup)
@@ -414,10 +464,10 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<Storage_Exec_CMMES>
-                if (response is List<Storage_Exec_CMMES> storage_exec && storage_exec.Count > 0)
+                // Otherwise, cast to StorageExecByFilterResponse
+                if (response is LocationStorageByFilterResponse locationStorage && locationStorage.LocationStorageByFilter.Count > 0)
                 {
-                    return storage_exec[0];
+                    return locationStorage.LocationStorageByFilter[0];
                 }
             }
             catch (Exception ex)
@@ -456,10 +506,10 @@ namespace KG.Mobile.Services
                 }
                 ";
 
-                var variables = new { lotPropertyTypeName };
+                var variables = new { name = lotPropertyTypeName };
 
                 // Call your generic GraphQL executor
-                var response = await _graphQLApiServices.ExecuteAsync<List<LotPropertyType_CMMES>>(query, variables);
+                var response = await _graphQLApiServices.ExecuteAsync<LotPropertyTypeByFilterResponse>(query, variables);
 
                 // Check if response is a PopupMessage (error)
                 if (response is PopupMessage popup)
@@ -468,10 +518,10 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<LotPropertyType_CMMES>
-                if (response is List<LotPropertyType_CMMES> lotPropertyType && lotPropertyType.Count > 0)
+                // Otherwise, cast to LotPropertyTypeByFilterResponse
+                if (response is LotPropertyTypeByFilterResponse lotPropertyType && lotPropertyType.lotPropertyTypeByFilter.Count > 0)
                 {
-                    return lotPropertyType[0];
+                    return lotPropertyType.lotPropertyTypeByFilter[0];
                 }
             }
             catch (Exception ex)
@@ -519,7 +569,7 @@ namespace KG.Mobile.Services
                 };
 
                 // Call your generic GraphQL executor
-                var response = await _graphQLApiServices.ExecuteAsync<List<LotProperty_CMMES>>(query, variables);
+                var response = await _graphQLApiServices.ExecuteAsync< LotPropertyByFilterResponse> (query, variables);
 
                 // Check if response is a PopupMessage (error)
                 if (response is PopupMessage popup)
@@ -528,10 +578,10 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<LotPropertyType_CMMES>
-                if (response is List<LotProperty_CMMES> lotPropertyType && lotPropertyType.Count > 0)
+                // Otherwise, cast to LotPropertyByFilterResponse
+                if (response is LotPropertyByFilterResponse lotPropertyType && lotPropertyType.lotPropertyByFilter.Count > 0)
                 {
-                    return lotPropertyType[0];
+                    return lotPropertyType.lotPropertyByFilter[0];
                 }
             }
             catch (Exception ex)
@@ -779,15 +829,15 @@ namespace KG.Mobile.Services
         //    return null; //default return
         //}
 
-        
-        //GradeReasonGroup Function, GetGradeReasonGroup
-        public async Task<List<GradeReasonGroup_CMMES>> GetGradeReasonGroup()
+
+        //GradeReasonGroup Function, GradeReasonGroupGet
+        public async Task<List<GradeReasonGroup_CMMES>> GradeReasonGroupGet()
         {
             try
             {
                 // GraphQL query to get WorkOrderProperty by WorkOrderPropertyTypeId and WorkOrderPropertyValue
                 string query = @"
-                query GetGradeReasonGroup {
+                query GradeReasonGroupGet {
                     gradeReasonGroup {
                         gradeReasonGroupId
                         gradeReasonGroupParentId
@@ -803,9 +853,8 @@ namespace KG.Mobile.Services
                 }
                 ";
 
-
                 // Call your generic GraphQL executor
-                var response = await _graphQLApiServices.ExecuteAsync<List<GradeReasonGroup_CMMES>>(query);
+                var response = await _graphQLApiServices.ExecuteAsync<GradeReasonGroupResponse>(query);
 
                 // Check if response is a PopupMessage (error)
                 if (response is PopupMessage popup)
@@ -815,9 +864,9 @@ namespace KG.Mobile.Services
                 }
 
                 // Otherwise, cast to List<GradeReasonGroup_CMMES>
-                if (response is List<GradeReasonGroup_CMMES> gradeReasonGroup && gradeReasonGroup.Count > 0)
+                if (response is GradeReasonGroupResponse gradeReasonGroup && gradeReasonGroup.gradeReasonGroup.Count > 0)
                 {
-                    return gradeReasonGroup;
+                    return gradeReasonGroup.gradeReasonGroup;
                 }
             }
             catch (Exception ex)
@@ -835,14 +884,14 @@ namespace KG.Mobile.Services
             return null; // default return
         }
 
-        //GradeReason Function, GetGradeReason
-        public async Task<List<GradeReason_CMMES>> GetGradeReason()
+        //GradeReason Function, GradeReasonGet
+        public async Task<List<GradeReason_CMMES>> GradeReasonGet()
         {
             try
             {
                 // GraphQL query to get Grade Reasons 
                 string query = @"
-                query GetGradeReason {
+                query GradeReasonGet {
                     gradeReason {
                         gradeReasonId
                         name
@@ -855,12 +904,11 @@ namespace KG.Mobile.Services
                         dateUpdated
                         userUpdated
                     }
-                }
+                }   
                 ";
 
-
                 // Call your generic GraphQL executor
-                var response = await _graphQLApiServices.ExecuteAsync<List<GradeReason_CMMES>>(query);
+                var response = await _graphQLApiServices.ExecuteAsync<GradeReasonResponse>(query);
 
                 // Check if response is a PopupMessage (error)
                 if (response is PopupMessage popup)
@@ -869,10 +917,10 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<GradeReason_CMMES>
-                if (response is List<GradeReason_CMMES> gradeReason && gradeReason.Count > 0)
+                // Otherwise, cast to GradeReasonResponse
+                if (response is GradeReasonResponse gradeReason && gradeReason.gradeReason.Count > 0)
                 {
-                    return gradeReason;
+                    return gradeReason.gradeReason;
                 }
             }
             catch (Exception ex)
@@ -942,7 +990,7 @@ namespace KG.Mobile.Services
             finally
             {
                 // Hide Busy
-                WeakReferenceMessenger.Default.Send(new BusyMessage(false, string.Empty));
+                WeakReferenceMessenger.Default.Send(new BusyMessage(false, ""));
             }
         }
 
@@ -978,7 +1026,7 @@ namespace KG.Mobile.Services
         #endregion
         #region Mutations
         //Move Inventory To LocationId 
-        public async Task<List<Lot_CMMES?>> MoveInventorytoLocationId(string lotId, decimal quantityToMove, string unitOfMeasureId, string moveToLocationId)
+        public async Task<Lot_CMMES?> MoveInventorytoLocationId(string lotId, decimal quantityToMove, string unitOfMeasureId, string moveToLocationId)
         {
             try
             {
@@ -1028,7 +1076,7 @@ namespace KG.Mobile.Services
                 };
 
                 // Call your generic GraphQL executor
-                var response = await _graphQLApiServices.ExecuteAsync<List<Lot_CMMES>>(mutation, variables);
+                var response = await _graphQLApiServices.ExecuteAsync<InventoryMoveResponse>(mutation, variables);
 
                 // Check if response is a PopupMessage (error)
                 if (response is PopupMessage popup)
@@ -1037,10 +1085,10 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<Lot_CMMES>
-                if (response is List<Lot_CMMES> lot && lot.Count > 0)
+                // Otherwise, cast to InventoryMoveResponse
+                if (response is InventoryMoveResponse inventoryMove && inventoryMove.InventoryMove.Count > 0)
                 {
-                    return lot;
+                    return inventoryMove.InventoryMove[0];
                 }
             }
             catch (Exception ex)
@@ -1059,7 +1107,7 @@ namespace KG.Mobile.Services
         }
 
         //Add Lot Property
-        public async Task<LotProperty_CMMES?> AddLotProperty(string lotId, string lotPropertyTypeId, string value)
+        public async Task<LotProperty_CMMES?> LotPropertyAdd(string lotId, string lotPropertyTypeId, string value)
         {
             try
             {
@@ -1092,7 +1140,7 @@ namespace KG.Mobile.Services
                 };
 
                 // Call your generic GraphQL executor
-                var response = await _graphQLApiServices.ExecuteAsync<List<LotProperty_CMMES>>(mutation, variables);
+                var response = await _graphQLApiServices.ExecuteAsync<LotPropertyAddResponse>(mutation, variables);
 
                 // Check if response is a PopupMessage (error)
                 if (response is PopupMessage popup)
@@ -1101,10 +1149,10 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<LotProperty_CMMES>
-                if (response is List<LotProperty_CMMES> lotProperty && lotProperty.Count > 0)
+                // Otherwise, cast to LotPropertyAddResponse
+                if (response is LotPropertyAddResponse lotProperty && lotProperty.lotPropertyAdd.Count > 0)
                 {
-                    return lotProperty[0];
+                    return lotProperty.lotPropertyAdd[0];
                 }
             }
             catch (Exception ex)
@@ -1123,7 +1171,7 @@ namespace KG.Mobile.Services
         }
 
         //Update Lot Property
-        public async Task<LotProperty_CMMES?> UpdateLotProperty(string lotId, string lotPropertyId, string value)
+        public async Task<LotProperty_CMMES?> LotPropertyUpdate(string lotId, string lotPropertyId, string value)
         {
             try
             {
@@ -1156,7 +1204,7 @@ namespace KG.Mobile.Services
                 };
 
                 // Call your generic GraphQL executor
-                var response = await _graphQLApiServices.ExecuteAsync<List<LotProperty_CMMES>>(mutation, variables);
+                var response = await _graphQLApiServices.ExecuteAsync<LotPropertyUpdateResponse>(mutation, variables);
 
                 // Check if response is a PopupMessage (error)
                 if (response is PopupMessage popup)
@@ -1165,10 +1213,10 @@ namespace KG.Mobile.Services
                     return null;
                 }
 
-                // Otherwise, cast to List<LotProperty_CMMES>
-                if (response is List<LotProperty_CMMES> lotProperty && lotProperty.Count > 0)
+                // Otherwise, cast to LotPropertyUpdateResponse
+                if (response is LotPropertyUpdateResponse lotProperty && lotProperty.lotPropertyUpdate.Count > 0)
                 {
-                    return lotProperty[0];
+                    return lotProperty.lotPropertyUpdate[0];
                 }
             }
             catch (Exception ex)

@@ -1,66 +1,35 @@
-﻿using System.Collections.Generic;
+﻿using KG.Mobile.Helpers;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
-using KG_Data_Access;
 using System.Runtime.CompilerServices;
-using KG.Mobile.Helpers;
-using static KG.Mobile.Helpers.MobileDatabase;
-using System.Threading.Tasks;
 using System.Windows.Input;
-using KG.Mobile.Models;
+using static KG.Mobile.Helpers.MobileDatabase;
 
 namespace KG.Mobile.ViewModels._98_SessionLog
 {
     class SessionLogViewModel : INotifyPropertyChanged
     {
-        //helpers
-        private MobileDatabase database = MobileDatabase.Instance;
+        private readonly MobileDatabase database = MobileDatabase.Instance;
 
-        #region DataGrid Handling
-        //DataGrid Tags
-        public IEnumerable<Log> _log;
-        public IEnumerable<Log> log
-        {
-            get
-            {
-                return _log;
-            }
-            set
-            {
-                _log = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("log"));
-            }
-        }
+        public ObservableCollection<Log> log { get; } = new();
 
-        public Log _logSelected;
-        public Log logSelected
-        {
-            get
-            {
-                return _logSelected;
-            }
-            set
-            {
-                _logSelected = value;
-
-                //open popup with detail
-                PopupMessage msg = new PopupMessage("Log Detail","Log Detail",value.comment,"Close");
-                MessagingCenter.Send(msg, "PopupMessageNoLog");
-
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("logSelected"));
-            }
-        }
-        #endregion
-
-        #region WebAPI Calls and Commands
         public SessionLogViewModel()
         {
-            loadLog();
         }
 
-        public async Task loadLog()
+        public async Task LoadLog()
         {
-            //Load Top 100 Log Entries in Descending Order
-            log = await database.LogGetTop1000();
+            var logs = await database.LogGetTop200();
+            log.Clear();
+
+            foreach (var l in logs)
+                log.Add(l);
+        }
+
+        #region WebAPI Calls and Commands
+        public async Task InitializeAsync()
+        {
+            await LoadLog();
         }
 
         //Call Move Inventory
@@ -71,7 +40,7 @@ namespace KG.Mobile.ViewModels._98_SessionLog
                 return new Command(async () =>
                 {
                     await database.LogClear();
-                    await loadLog();                    
+                    await LoadLog();                    
                 });
             }
         }

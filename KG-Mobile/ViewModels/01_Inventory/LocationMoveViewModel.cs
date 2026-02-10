@@ -8,6 +8,8 @@ using KG_Data_Access;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -17,7 +19,7 @@ using System.Windows.Input;
 
 namespace KG.Mobile.ViewModels._01_Inventory
 {
-    class LocationMoveViewModel : INotifyPropertyChanged
+    public class LocationMoveViewModel : INotifyPropertyChanged
     {
         private GraphQLApiServices _graphQLApiServices = new GraphQLApiServices();
         private GraphQLApiServicesHelper _graphQLApiServicesHelper = new GraphQLApiServicesHelper();
@@ -26,7 +28,11 @@ namespace KG.Mobile.ViewModels._01_Inventory
 
         //current item inventory and related data
         private Location_CMMES location { get; set; }
+        private LocationStorage_CMMES locationStorage { get; set; }
         private Location_CMMES moveToLocation { get; set; }
+
+        public event Action? RequestLocationFocus;
+        public event Action? RequestMoveToLocationFocus;
 
         #region Constructor
         public LocationMoveViewModel(SoundHelper soundHelper)
@@ -43,41 +49,33 @@ namespace KG.Mobile.ViewModels._01_Inventory
         private string _Result;
         public string Result
         {
-            get
-            {
-                return _Result;
-            }
-            set
+            get => _Result;
+            private set
             {
                 _Result = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Result"));
-                if (value != "")
-                {
-                    if(ResultError)
-                    {
-                        ResultErrorVisible = true;
-                        ResultMessageVisible = false;
+                OnPropertyChanged();
 
-                        //save to log
-                        database.LogAdd(DateTime.Now, "Error", Settings.LocationMoveName + " Move", value);
-                    }
-                    else
-                    {
-                        ResultErrorVisible = false;
-                        ResultMessageVisible = true;
-
-                        //save to log
-                        database.LogAdd(DateTime.Now, "Info", Settings.LocationMoveName + " Move", value);
-                    }
-                    
-                }
-                else
-                {
-                    ResultErrorVisible = false;
-                    ResultMessageVisible = false;
-                }
+                ResultErrorVisible = !string.IsNullOrEmpty(value) && ResultError;
+                ResultMessageVisible = !string.IsNullOrEmpty(value) && !ResultError;
             }
         }
+        async Task SetResultAsync(
+            string message,
+            bool isError,
+            string component
+        )
+        {
+            ResultError = isError;
+            Result = message;
+
+            await database.LogAdd(
+                DateTime.Now,
+                isError ? "Error" : "Info",
+                component,
+                message
+            );
+        }
+
 
         //ResultError Tag
         private bool ResultError;
@@ -262,8 +260,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
                     if (!String.IsNullOrEmpty(LocationName))
                     {
                         //Show Busy
-                        BusyMessage msg = new BusyMessage(true, "Find " + Settings.LocationMoveName);
-                        MessagingCenter.Send(msg, "BusyPopup");
+                        WeakReferenceMessenger.Default.Send(new BusyMessage(true, "Find " + Settings.LocationMoveName));
 
                         location = await _graphQLApiServicesHelper.LocationGetByLocationName(LocationName);
 
@@ -271,72 +268,93 @@ namespace KG.Mobile.ViewModels._01_Inventory
                         if (location != null)
                         {
                             //is it a moveable location?
-                            Storage_Exec_CMMES se;
+                            StorageExec_CMMES se;
                             se = await _graphQLApiServicesHelper.StorageExecByLocationId(location.LocationId);
+
 
                             if (se != null)
                             {
-                                if (se.Movable[0].Value == "1")
+                                if (se.Type[0].Value == "Trolley Work Unit" && se.Movable[0].Value == "1")
                                 {
                                     LocationDescription = this.location.Description;
+                                    locationStorage = await _graphQLApiServicesHelper.LocationStorageByLocationId(location.LocationId);
 
-                                    //get the current location
-                                    if (se.LocationStorageDetails[0].LocationId_StoredIn == null)
+                                    if (locationStorage != null)
                                     {
-                                        CurrentLocation = "";
-                                        CurrentLocationDescription = "";
-                                    }
-                                    else
-                                    {
-                                        Location_CMMES e = await _graphQLApiServicesHelper.LocationGetByLocationId(se.LocationStorageDetails[0].LocationId_StoredIn);
-                                        CurrentLocation = e.Name;
-                                        CurrentLocationDescription = e.Description;
+                                        //get the current location
+                                        if (locationStorage.LocationId_StoredIn == null)
+                                        {
+                                            CurrentLocation = "";
+                                            CurrentLocationDescription = "";
+                                        }
+                                        else
+                                        {
+                                            Location_CMMES e = await _graphQLApiServicesHelper.LocationGetByLocationId(locationStorage.LocationId_StoredIn);
+                                            CurrentLocation = e.Name;
+                                            CurrentLocationDescription = e.Description;
 
+                                        }
                                     }
 
-                                    ResultError = false;
-                                    Result = Settings.LocationMoveName + " '" + LocationName + "' Found";
+                                    await SetResultAsync(
+                                        $"{Settings.LocationMoveName} '{LocationName}' Found",
+                                        isError: false,
+                                        component: $"{Settings.LocationMoveName} Move"
+                                    );
 
                                     //reset the destiantion to move to and select the field
                                     resetMoveToLocation();
+                                    RequestMoveToLocationFocus?.Invoke();
                                 }
                                 else
                                 {
-                                    ResultError = true;
-                                    Result = "'" + LocationName + "' Not a Movable " + Settings.LocationMoveName;
-
+                                    await SetResultAsync(
+                                        $"'{LocationName}' Not a Valid  {Settings.LocationMoveName}",
+                                        isError: true,
+                                        component: $"{Settings.LocationMoveName} Move"
+                                    );
                                     //reset related values
                                     resetLocation();
+                                    RequestLocationFocus?.Invoke();
                                 }
                             }
                             else
                             {
-                                ResultError = true;
-                                Result = "'" + LocationName + "' Not a Valid " + Settings.LocationMoveName;
+                                await SetResultAsync(
+                                        $"Couldn't Find Storage Details for '{LocationName}'",
+                                        isError: true,
+                                        component: $"{Settings.LocationMoveName} Move"
+                                );
 
                                 //reset related values
                                 resetLocation();
+                                RequestLocationFocus?.Invoke();
                             }
 
                         }
                         else
                         {
-                            ResultError = true;
-                            Result = Settings.LocationMoveName + " '" + LocationName + "' Not Found";
+                            await SetResultAsync(
+                                $"{Settings.LocationMoveName}: '{LocationName}' Not Found",
+                                isError: true,
+                                component: $"{Settings.LocationMoveName} Move"
+                            );
 
                             //reset related values
                             resetLocation();
-
+                            RequestLocationFocus?.Invoke();
                         }
 
                         //Hide Busy
-                        msg.visible = false;
-                        MessagingCenter.Send(msg, "BusyPopup");
+                        WeakReferenceMessenger.Default.Send(new BusyMessage(false, ""));
                     }
                     else
                     {
-                        ResultError = true;
-                        Result = "Blank " + Settings.LocationMoveName + " Name";                        
+                        await SetResultAsync(
+                            $"Blank {Settings.LocationMoveName} Name",
+                            isError: true,
+                            component: $"{Settings.LocationMoveName} Move"
+                        );
                     }
                 });
             }
@@ -352,7 +370,6 @@ namespace KG.Mobile.ViewModels._01_Inventory
             CurrentLocationDescription = "";
             location = null;
 
-            MessagingCenter.Send("Show", "LocationMovePage-SetLocationNameFocus");
         }
 
         //Command for Move To Location Barcode Enter key
@@ -369,44 +386,88 @@ namespace KG.Mobile.ViewModels._01_Inventory
                     if (!String.IsNullOrEmpty(MoveToLocationName))
                     {
                         //Show Busy
-                        BusyMessage msg = new BusyMessage(true, "Find location");
-                        MessagingCenter.Send(msg, "BusyPopup");
+                        WeakReferenceMessenger.Default.Send( new BusyMessage(true, "Find location"));
+
 
                         moveToLocation = await _graphQLApiServicesHelper.LocationGetByLocationName(MoveToLocationName);
 
                         //entity found?
                         if (moveToLocation != null)
-                        {                            
-                            MoveToLocationDescription = this.moveToLocation.Description;
-                            
-                            ResultError = false;
-                            Result = "Location '" + MoveToLocationName + "' Found";
-                            
-                            //Move Automatically if MultiMove is Enabled
-                            if (AutoMoveEnabled)
-                            {
-                                await MoveLocationWrapper();
-                            }
+                        {
+                            // Verify Valid storage location
+                            StorageExec_CMMES se;
+                            se = await _graphQLApiServicesHelper.StorageExecByLocationId(moveToLocation.LocationId);
 
+                            if (se != null)
+                            {
+                                if (se.Type[0].Value != "Trolley Work Unit" && se.Movable[0].Value == "0" && se.CanStore[0].Value == "1")
+                                {
+
+                                    //Move Automatically if MultiMove is Enabled
+                                    if (AutoMoveEnabled)
+                                    {
+                                        WeakReferenceMessenger.Default.Send(new BusyMessage(false, ""));
+                                        await MoveLocationWrapper();
+                                    }
+                                    else
+                                    {
+                                        MoveToLocationDescription = this.moveToLocation.Description;
+
+                                        await SetResultAsync(
+                                            $"Move To Location ' {MoveToLocationName} ' Found",
+                                            isError: false,
+                                            component: $"{Settings.LocationMoveName} Move"
+                                        );
+                                    }
+                                }
+                                else
+                                {
+                                    await SetResultAsync(
+                                        $"Move To Location '{MoveToLocationName}' is a {Settings.LocationMoveName}",
+                                        isError: true,
+                                        component: $"{Settings.LocationMoveName} Move"
+                                    );
+                                    //reset related values
+                                    resetMoveToLocation();
+                                    RequestMoveToLocationFocus?.Invoke();
+                                }
+                            }
+                            else
+                            {
+                                await SetResultAsync(
+                                        $"Couldn't Find Storage Details for Move To Location '{MoveToLocationName}'",
+                                        isError: true,
+                                        component: $"{Settings.LocationMoveName} Move"
+                                );
+
+                                //reset related values
+                                resetMoveToLocation();
+                                RequestMoveToLocationFocus?.Invoke();
+                            }
                         }
                         else
                         {
-                            ResultError = true;
-                            Result = "Location '" + MoveToLocationName + "' Not Found";
+                            await SetResultAsync(
+                                $"Location ' {MoveToLocationName} ' Not Found",
+                                isError: true,
+                                component: $"{Settings.LocationMoveName} Move"
+                            );
 
                             //reset related values
                             resetMoveToLocation();
-
+                            RequestMoveToLocationFocus?.Invoke();
                         }
 
                         //Hide Busy
-                        msg.visible = false;
-                        MessagingCenter.Send(msg, "BusyPopup");
+                        WeakReferenceMessenger.Default.Send(new BusyMessage(false, ""));
                     }
                     else
                     {
-                        ResultError = true;
-                        Result = "Blank Location Name";
+                        await SetResultAsync(
+                            $"Blank Location Name",
+                            isError: true,
+                            component: $"{Settings.LocationMoveName} Move"
+                        );
                     }
                 });
             }
@@ -420,7 +481,6 @@ namespace KG.Mobile.ViewModels._01_Inventory
             MoveToLocationDescription = "";
             moveToLocation = null;
 
-            MessagingCenter.Send("Show", "LocationMovePage-SetMoveToLocationNameFocus");
         }    
 
         //Call Move Inventory
@@ -437,55 +497,87 @@ namespace KG.Mobile.ViewModels._01_Inventory
 
         async Task MoveLocationWrapper()
         {
-            //check that ent and destiantion are populated
+            //check that ent and destination are populated
             if (location != null && moveToLocation != null)
             {
-                //move the location then reset both fields leaving the Move To Location Field selected
-                await MoveLocation();
-                resetMoveToLocation();
-                resetLocation();
-
+                if (locationStorage.LocationId_StoredIn == moveToLocation.LocationId)
+                {
+                    ResultError = false;
+                    Result = Settings.LocationMoveName + " Already at Selected Location";
+                    await SetResultAsync(
+                        $"{Settings.LocationMoveName}: {moveToLocation.Name} Already at {moveToLocation.Name}",
+                        isError: false,
+                        component: $"{Settings.LocationMoveName} Move"
+                    );
+                    resetMoveToLocation();
+                    resetLocation();
+                    RequestLocationFocus?.Invoke();
+                }
+                else
+                {
+                    //move the location then reset both fields leaving the Move To Location Field selected
+                    if (locationStorage == null) // Add 
+                    {
+                        await InventoryLocationAdd();
+                    }
+                    else // Move
+                    {
+                        await InventoryLocationMove();
+                    }
+                    resetMoveToLocation();
+                    resetLocation();
+                    RequestLocationFocus?.Invoke();
+                }
             }
             else if (location == null && moveToLocation == null)
             {
-                ResultError = true;
-                Result = "Nothing selected";
+                await SetResultAsync(
+                    $"Nothing selected",
+                    isError: true,
+                    component: $"{Settings.LocationMoveName} Move"
+                );
             }
             else if (location == null)
             {
-                ResultError = true;
-                Result = "No " + Settings.LocationMoveName + " to move selected";
+                await SetResultAsync(
+                    $"No  {Settings.LocationMoveName} to move selected",
+                    isError: true,
+                    component: $"{Settings.LocationMoveName} Move"
+                );
             }
             else if (moveToLocation == null)
             {
-                ResultError = true;
-                Result = "No Location to move to selected";
+                await SetResultAsync(
+                    $"No Location to move to selected",
+                    isError: true,
+                    component: $"{Settings.LocationMoveName} Move"
+                );
             }
         }
 
-        async Task MoveLocation()
+        async Task InventoryLocationMove()
         {
             //Show Busy
-            WeakReferenceMessenger.Default.Send(new BusyMessage(true, "Shipping Inventory"));
+            WeakReferenceMessenger.Default.Send(new BusyMessage(true, "Moving " + Settings.LocationMoveName));
             try
             {
                 // GraphQL mutation to move inventory
                 string mutation = @"
-                    mutation MoveLocation($locationId: ID!, $locationId_StoredIn: ID!) {
-                        inventoryLocationMove(
-                            inventoryLocationMove: { locationId: $locationId, locationId_StoredIn: $locationId_StoredIn }
-                        ) {
-                            locationStorageId
-                            locationId
-                            locationId_StoredIn
-                            locationStorageStateId
-                            data
-                            dateCreated
-                            userCreated
-                            dateUpdated
-                            userUpdated
-                        }
+                mutation LocationMove($locationId: ID!, $locationId_StoredIn: ID!) {
+                    inventoryLocationMove(
+                        inventoryLocationMove: { locationId: $locationId, locationId_StoredIn: $locationId_StoredIn }
+                    ) {
+                        locationStorageId
+                        locationId
+                        locationId_StoredIn
+                        locationStorageStateId
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
                     }
+                }
                 ";
 
                 // Prepare variables
@@ -496,7 +588,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
                 };
 
                 //api call
-                var response = await _graphQLApiServices.ExecuteAsync<List<LocationStorage_CMMES>>(mutation, variables);
+                var response = await _graphQLApiServices.ExecuteAsync<LocationMoveResponse>(mutation, variables);
 
                 // Handle errors
                 if (response is PopupMessage popup)
@@ -505,15 +597,21 @@ namespace KG.Mobile.ViewModels._01_Inventory
                     return;
                 }
                 //check if response was ok
-                if (response is List<LocationStorage_CMMES> movedLocation && movedLocation.Count > 0)
+                if (response is LocationMoveResponse movedLocation && movedLocation.inventoryLocationMove.Count > 0)
                 {
-                    ResultError = false;
-                    Result = Settings.LocationMoveName + " '" + location.Name + "' moved to '" + moveToLocation.Name + "'";
+                    await SetResultAsync(
+                        $"{Settings.LocationMoveName} '{location.Name}' moved to '{moveToLocation.Name}'",
+                        isError: false,
+                        component: $"{Settings.LocationMoveName} Move"
+                    ); 
                 }
                 else
                 {
-                    ResultError = true;
-                    Result = "Failed to move " + Settings.LocationMoveName + " '" + location.Name + "' to '" + moveToLocation.Name + "'";
+                    await SetResultAsync(
+                        $"Failed to move {Settings.LocationMoveName} '{location.Name}' to '{moveToLocation.Name}'",
+                        isError: true,
+                        component: $"{Settings.LocationMoveName} Move"
+                    );
 
                     var popup2 = new PopupMessage("Location Move Failed", "Location Move", "No response from server", "Ok");
                     WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup2));
@@ -528,10 +626,85 @@ namespace KG.Mobile.ViewModels._01_Inventory
             finally
             {
                 // Hide Busy
-                WeakReferenceMessenger.Default.Send(new BusyMessage(false, string.Empty));
+                WeakReferenceMessenger.Default.Send(new BusyMessage(false, ""));
             }
         }
-        
+
+        async Task InventoryLocationAdd()
+        {
+            //Show Busy
+            WeakReferenceMessenger.Default.Send(new BusyMessage(true, "Moving " + Settings.LocationMoveName));
+            try
+            {
+                // GraphQL mutation to move inventory
+                string mutation = @"
+                mutation InventoryLocationAdd($locationId: ID!, $locationId_StoredIn: ID!) {
+                    inventoryLocationAdd(
+                        inventoryLocationAdd: { locationId: $locationId, locationId_StoredIn: $locationId_StoredIn }
+                    ) {
+                        locationStorageId
+                        locationId
+                        locationId_StoredIn
+                        locationStorageStateId
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
+                    }
+                }   
+                ";
+
+                // Prepare variables
+                var variables = new
+                {
+                    locationId = location.LocationId,
+                    locationId_StoredIn = moveToLocation.LocationId
+                };
+
+                //api call
+                var response = await _graphQLApiServices.ExecuteAsync<LocationMoveResponse>(mutation, variables);
+
+                // Handle errors
+                if (response is PopupMessage popup)
+                {
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+                    return;
+                }
+                //check if response was ok
+                if (response is LocationMoveResponse movedLocation && movedLocation.inventoryLocationMove.Count > 0)
+                {
+                    await SetResultAsync(
+                        $"{Settings.LocationMoveName} '{location.Name}' moved to '{moveToLocation.Name}'",
+                        isError: false,
+                        component: $"{Settings.LocationMoveName} Move"
+                    );
+                }
+                else
+                {
+                    await SetResultAsync(
+                        $"Failed to move {Settings.LocationMoveName} '{location.Name}' to '{moveToLocation.Name}'",
+                        isError: true,
+                        component: $"{Settings.LocationMoveName} Move"
+                    );
+
+                    var popup2 = new PopupMessage("Location Move Failed", "Location Move", "No response from server", "Ok");
+                    WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup2));
+                }
+            }
+            catch (Exception ex)
+            {
+                // Catch unexpected exceptions
+                var popup = new PopupMessage("GraphQL Exception", "ItemService", ex.Message, "Ok");
+                WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
+            }
+            finally
+            {
+                // Hide Busy
+                WeakReferenceMessenger.Default.Send(new BusyMessage(false, ""));
+            }
+        }
+
         //Cancel Current Location
         public ICommand CancelLocation
         {
@@ -541,6 +714,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
                 {
                     //reset related values
                     resetLocation();
+                    RequestLocationFocus?.Invoke();
                 });
             }
 
@@ -555,6 +729,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
                 {
                     //reset related values
                     resetMoveToLocation();
+                    RequestMoveToLocationFocus?.Invoke();
                 });
             }
 

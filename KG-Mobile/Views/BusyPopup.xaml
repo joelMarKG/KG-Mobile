@@ -9,7 +9,6 @@
            BackgroundColor="Black"
            Opacity="0.8"
            Padding="20"
-           Shadow="False"
             >
 
         <Grid>

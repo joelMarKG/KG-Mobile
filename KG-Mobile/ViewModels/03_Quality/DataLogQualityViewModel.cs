@@ -17,7 +17,7 @@ using System.Windows.Input;
 
 namespace KG.Mobile.ViewModels._03_Quality
 {
-    class DataLogQualityViewModel : INotifyPropertyChanged
+    public class DataLogQualityViewModel : INotifyPropertyChanged
     {
         private GraphQLApiServices _graphQLApiServices = new GraphQLApiServices();
         private GraphQLApiServicesHelper _graphQLApiServicesHelper = new GraphQLApiServicesHelper();
@@ -33,7 +33,9 @@ namespace KG.Mobile.ViewModels._03_Quality
         List<GradeReasonGroup_CMMES> gradeReasonGroups;
 
         //lot
-        List<Lot_CMMES> lot;
+        Lot_CMMES lot;
+
+        public event Action? RequestBarcodeFocus;
 
         #region constructor
 
@@ -55,10 +57,10 @@ namespace KG.Mobile.ViewModels._03_Quality
         public async Task DataLogQualityViewModelAsync()
         {
 
-            gradeReasons = await _graphQLApiServicesHelper.GetGradeReason();
+            gradeReasons = await _graphQLApiServicesHelper.GradeReasonGet();
 
             //build the defect level 1 items
-            gradeReasonGroups = await _graphQLApiServicesHelper.GetGradeReasonGroup();
+            gradeReasonGroups = await _graphQLApiServicesHelper.GradeReasonGroupGet();
 
             var xDefectLevel1 = gradeReasonGroups.Select(x => new
             {
@@ -102,7 +104,7 @@ namespace KG.Mobile.ViewModels._03_Quality
                         ResultMessageVisible = false;
 
                         //save to log
-                        database.LogAdd(DateTime.Now, "Error", "Job Takeout", value);
+                        _ = database.LogAdd(DateTime.Now, "Error", "Job Takeout", value);
                     }
                     else
                     {
@@ -110,7 +112,7 @@ namespace KG.Mobile.ViewModels._03_Quality
                         ResultMessageVisible = true;
 
                         //save to log
-                        database.LogAdd(DateTime.Now, "Info", "Job Takeout", value);
+                        _ = database.LogAdd(DateTime.Now, "Info", "Job Takeout", value);
                     }
 
                 }
@@ -321,6 +323,7 @@ namespace KG.Mobile.ViewModels._03_Quality
             lot = null;
             DefectLevel1Selected = null;
             DefectLevel2Selected = null;
+            RequestBarcodeFocus?.Invoke();
         }
 
         //Clear the Current Barcode
@@ -332,6 +335,7 @@ namespace KG.Mobile.ViewModels._03_Quality
                 {
                     //reset related values
                     Barcode = "";
+                    RequestBarcodeFocus?.Invoke();
                 });
             }
 
@@ -347,7 +351,7 @@ namespace KG.Mobile.ViewModels._03_Quality
                     //look up the lot
                     lot = await _graphQLApiServicesHelper.InventoryGetByLotName(Barcode);
 
-                    if ((lot == null) || (lot.Count == 0))
+                    if ((lot == null))
                     {
                         ResultError = true;
                         Result = "Inventory not found";
@@ -380,7 +384,7 @@ namespace KG.Mobile.ViewModels._03_Quality
         //change the Lot Grade
         async Task UpdateLotGrade()
         {
-            if (DefectLevel2Selected != null && lot != null && lot.Count != 0)
+            if (DefectLevel2Selected != null && lot != null)
             {
                 WeakReferenceMessenger.Default.Send(new BusyMessage(true, "Grade Reason Update"));
 
@@ -388,7 +392,7 @@ namespace KG.Mobile.ViewModels._03_Quality
                 {
                     // GraphQL mutation to move inventory
                     string mutation = @"
-                    mutation UpdateInventory($lotId: ID!, $gradeReasonId: ID!) {
+                    mutation InventoryUpdate($lotId: ID!, $gradeReasonId: ID!) {
                         inventoryUpdate(
                             inventoryUpdate: { lotId: $lotId, gradeReasonId: $gradeReasonId }
                         ) {
@@ -417,12 +421,12 @@ namespace KG.Mobile.ViewModels._03_Quality
                     // Prepare variables
                     var variables = new
                     {
-                        lotId = lot[0].LotId,
+                        lotId = lot.LotId,
                         gradeReasonId = DefectLevel2Selected.id
                     };
 
                     //api call
-                    var response = await _graphQLApiServices.ExecuteAsync<List<Lot_CMMES>>(mutation, variables);
+                    var response = await _graphQLApiServices.ExecuteAsync<InventoryUpdateResponse>(mutation, variables);
 
                     // Handle errors
                     if (response is PopupMessage popup)
@@ -431,7 +435,7 @@ namespace KG.Mobile.ViewModels._03_Quality
                         return;
                     }
                     //check if response was ok
-                    if (response is List<Lot_CMMES> inventory && inventory.Count > 0)
+                    if (response is InventoryUpdateResponse inventory && inventory.inventoryUpdate.Count > 0)
                     {
                         ResultError = false;
                         Result = Barcode + " marked as " + DefectLevel2Selected.name + " at " + DefectLevel1Selected.name;
@@ -462,7 +466,7 @@ namespace KG.Mobile.ViewModels._03_Quality
                 finally
                 {
                     // Hide Busy
-                    WeakReferenceMessenger.Default.Send(new BusyMessage(false, string.Empty));
+                    WeakReferenceMessenger.Default.Send(new BusyMessage(false, ""));
                 }
 
                 //reset everything
@@ -494,7 +498,7 @@ namespace KG.Mobile.ViewModels._03_Quality
             else
             {
                 //api call
-                var response = await _graphQLApiServicesHelper.MoveInventorytoLocationId(lot[0].LotId, lot[0].Quantity, lot[0].UnitOfMeasureId, toDefectLocation.LocationId);
+                var response = await _graphQLApiServicesHelper.MoveInventorytoLocationId(lot.LotId, lot.Quantity, lot.UnitOfMeasureId, toDefectLocation.LocationId);
 
                 // Handle errors
                 if (response is null)
@@ -506,11 +510,11 @@ namespace KG.Mobile.ViewModels._03_Quality
                 }
                 //check if response was ok
                 // Handle success
-                if (response is List<Lot_CMMES> movedLots && movedLots.Count > 0)
+                if (response is Lot_CMMES movedLots)
                 {
                     ResultError = false;
                     Result = Barcode + " marked as " + DefectLevel2Selected.name + " at " + DefectLevel1Selected.name;
-                    Result += ". " + lot[0].Name + " moved to " + toDefectLocation.Description;
+                    Result += ". " + lot.Name + " moved to " + toDefectLocation.Description;
                 }
             }
         }
@@ -532,12 +536,12 @@ namespace KG.Mobile.ViewModels._03_Quality
 
             //See if Previously Defected lotProperty already exists for Lot
 
-            LotProperty_CMMES defectLotProperty = await _graphQLApiServicesHelper.LotPropertyGetByLotIdLotPropertyTypeId(lot[0].LotId, defectLotPropertyType.LotPropertyTypeId);
+            LotProperty_CMMES defectLotProperty = await _graphQLApiServicesHelper.LotPropertyGetByLotIdLotPropertyTypeId(lot.LotId, defectLotPropertyType.LotPropertyTypeId);
 
             //If it Doesn't Exist Create it
             if (defectLotProperty == null)
             {
-                LotProperty_CMMES addDefectLotProperty = await _graphQLApiServicesHelper.AddLotProperty(lot[0].LotId, defectLotPropertyType.LotPropertyTypeId, "1");
+                LotProperty_CMMES addDefectLotProperty = await _graphQLApiServicesHelper.LotPropertyAdd(lot.LotId, defectLotPropertyType.LotPropertyTypeId, "1");
 
                 if (addDefectLotProperty == null)
                 {
@@ -553,7 +557,7 @@ namespace KG.Mobile.ViewModels._03_Quality
             else if (defectLotProperty != null && defectLotProperty.Value == "0")
             {
 
-                LotProperty_CMMES updateDefectLotProperty = await _graphQLApiServicesHelper.UpdateLotProperty(lot[0].LotId, defectLotProperty.LotPropertyId, "1");
+                LotProperty_CMMES updateDefectLotProperty = await _graphQLApiServicesHelper.LotPropertyUpdate(lot.LotId, defectLotProperty.LotPropertyId, "1");
 
                 if (updateDefectLotProperty == null)
                 {
@@ -593,7 +597,7 @@ namespace KG.Mobile.ViewModels._03_Quality
     }
 
     //class for the picker data
-    class PickerList
+    public class PickerList
     {
         public string id { get; set; }
         public string name { get; set; }

@@ -44,7 +44,7 @@ namespace KG.Mobile.Helpers
         public async Task setupDatabase()
         {
             // Get an absolute path to the database file
-            var databasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SBMOM.Mobile.Database.db");
+            var databasePath = Path.Combine(FileSystem.AppDataDirectory, "KG.Mobile.Database.db");
             db = new SQLiteAsyncConnection(databasePath);
 
             //create tables
@@ -67,14 +67,15 @@ namespace KG.Mobile.Helpers
         public async Task LogAdd(DateTime dateTime, string type, String component, String comment)
         {
             //awaits removed to not hold up the main thread during execution
-            db.ExecuteAsync("INSERT INTO Log (dateTime, type, component, comment, sentToServer) VALUES (?,?,?,?,?)", dateTime, type, component, comment, false);
+            await db.ExecuteAsync("INSERT INTO Log (dateTime, type, component, comment, sentToServer) VALUES (?,?,?,?,?)", dateTime, type, component, comment, false);
             //LogSendToServer();
+
         }
 
         //Load Top 100 Log Entries in Descending Order
-        public async Task<IEnumerable<Log>> LogGetTop1000()
+        public async Task<IEnumerable<Log>> LogGetTop200()
         {
-            return await db.Table<Log>().OrderByDescending(x => x.Id).Take(1000).ToListAsync();
+            return await db.Table<Log>().OrderByDescending(x => x.Id).Take(200).ToListAsync();
         }
 
         //clear the log table

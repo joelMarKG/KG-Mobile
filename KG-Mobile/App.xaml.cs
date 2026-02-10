@@ -4,19 +4,20 @@ using KG.Mobile.Helpers;
 using KG.Mobile.Models;
 using KG.Mobile.Services;
 using KG.Mobile.Views;
+using KG.Mobile.Views._00_Login;
 
 namespace KG.Mobile
 {
     public partial class App : Application
     {
-
-
+        //sound helper
+        private readonly SoundHelper _soundHelper;
         //database definition
         static MobileDatabase database;
 
         BusyPopup? _busyPopup;
 
-        public App()
+        public App(SoundHelper soundHelper)
         {
             //Startup, go to MainPage, which then goes to LoginPage
             InitializeComponent();
@@ -24,8 +25,10 @@ namespace KG.Mobile
             //construct database
             database = MobileDatabase.Instance;
 
+            _soundHelper = soundHelper;
+
             //Launch the Login Page, after login go to MainPage
-            MainPage = new AppShell();
+            MainPage = new NavigationPage(new LoginPage());
 
             //Messaging Subscription - General Popup Message
             WeakReferenceMessenger.Default.Register<PopupMessageRequest>(this, async (r, msg) =>
@@ -49,7 +52,7 @@ namespace KG.Mobile
             //Messaging Subscription - Error Popup Message
             WeakReferenceMessenger.Default.Register<PopupErrorMessage>(this, async (r, msg) =>
             {
-                _soundHelper.PlayError();
+                _soundHelper.PlayErrorAsync();
 
                 var popup = msg.Popup;
 
@@ -66,54 +69,6 @@ namespace KG.Mobile
                     $"{popup.title}: {popup.message}"
                 );
             });
-
-            ////Messaging Subscription - Login View Model: Login Success
-            //MessagingCenter.Subscribe<AuthToken>(this, "LoginSuccess", async (authToken) =>
-            //{
-            //    //check for successful login
-            //    if (authToken != null && authToken.StatusCode == "OK")
-            //    {
-            //        //Go To Main Page
-            //        MainPage = new MainPage();
-
-            //        //Save to Database
-            //        await database.LogAdd(DateTime.Now, "Info", "Security", "Login Success");
-            //    }
-            //    else
-            //    {
-            //        //Play the Error sound
-            //        _soundHelper.PlayError();
-
-            //        //Notify User with Popup
-            //        await App.Current.MainPage.DisplayAlert("Login Failed", "Login Failure, Check Username/Password", "Ok");
-
-            //        //Save to Database
-            //        await database.LogAdd(DateTime.Now, "Error", "Security", "Login Failure, Check Username/Password");
-            //    }
-
-            //});
-
-            ////Messaging Subscription - Login View Model: Already Logged In
-            //MessagingCenter.Subscribe<AuthToken>(this, "AlreadyLoggedIn", async (authToken) =>
-            //{
-            //    //Go To Main Page
-            //    MainPage = new MainPage();
-
-            //    //Save to Database
-            //    await database.LogAdd(DateTime.Now, "Info", "Security", "Login Resumed");
-
-            //});
-
-            ////Messaging Subscription - MainPage.xaml.cs: Log Out
-            //MessagingCenter.Subscribe<AuthToken>(this, "LogOut", async (authToken) =>
-            //{
-            //    //Go To Main Page
-            //    MainPage = new LoginPage();
-
-            //    //Save to Database
-            //    await database.LogAdd(DateTime.Now, "Info", "Security", "Log Out");
-
-            //});
 
             //Messaging Subscription - Show the Busy Popup
             WeakReferenceMessenger.Default.Register<BusyMessage>(this, async (r, msg) =>
@@ -132,23 +87,19 @@ namespace KG.Mobile
                 }
             });
 
+            //Messaging Subscription - No Visible Background for Loging.
+            WeakReferenceMessenger.Default.Register<LogMessageRequest>(this, async (r, msg) =>
+            {
+                var log = msg.Log;
 
-            ////Messaging Subscription - General Popup Message with no Database Logging
-            //MessagingCenter.Subscribe<PopupMessage>(this, "PopupMessageNoLog", async (msg) =>
-            //{
-            //    //Notify User with Popup
-            //    await App.Current.MainPage.DisplayAlert(msg.title, msg.message, msg.buttonText);
-
-            //});
-
-            ////Messaging Subscription - LogUnhandledException (From Main Activity)
-            //MessagingCenter.Subscribe<PopupMessage>(this, "LogUnhandledException", async (msg) =>
-            //{
-            //    //Save to Database
-            //    await database.LogAdd(DateTime.Now, "Unhandled Exception", msg.component, msg.title + ": " + msg.message);
-
-            //});
-
+                //Write to logs
+                await database.LogAdd(
+                    DateTime.Now,
+                    "Error",
+                    log.type,
+                    $"{log.component}: {log.comment}"
+                );
+            });
         }
 
         protected override void OnStart()

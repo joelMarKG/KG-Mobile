@@ -1,16 +1,10 @@
-﻿using CommunityToolkit.Maui.Views;
-using CommunityToolkit.Mvvm.Messaging;
-using KG.Mobile.Helpers;
+﻿using KG.Mobile.Helpers;
 using KG.Mobile.Models;
 using KG.Mobile.Models.GraphQLAPI_Response_Models;
-using StrawberryShake;
-using System;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+using System.Diagnostics;
 
 internal class GraphQLApiServices
 {
@@ -27,7 +21,7 @@ internal class GraphQLApiServices
     /// Logs in to a GraphQL API using username and password.
     /// Returns the access token as string if successful, or null if failed.
     /// </summary>
-    public async Task<string?> LoginAsync(string username, string password)
+    public async Task<(bool Success, string? Token)> LoginAsync(string username, string password)
     {
         try
         {
@@ -68,22 +62,24 @@ internal class GraphQLApiServices
                 loginElement.TryGetProperty("token", out var tokenElement))
             {
                 Settings.AccessToken = tokenElement.GetString();
-                return Settings.AccessToken;
+                return (true, Settings.AccessToken);
             }
 
-            return null; // failed to get token
+            return (false, null); // failed to get token
         }
         catch (HttpRequestException httpEx)
         {
             // Network or HTTP error
+            Debug.WriteLine($"HTTP Error: {httpEx.Message}");
             Console.WriteLine($"HTTP Error: {httpEx.Message}");
-            return null;
+            return (false, null);
         }
         catch (Exception ex)
         {
             // Catch all other exceptions
+            Debug.WriteLine($"Error: {ex.Message}");
             Console.WriteLine($"Error: {ex.Message}");
-            return null;
+            return (false, null);
         }
     }
 

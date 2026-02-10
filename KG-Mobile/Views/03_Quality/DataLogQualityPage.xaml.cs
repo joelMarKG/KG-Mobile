@@ -1,23 +1,23 @@
-﻿
-using KG.Mobile.Helpers;
+﻿using KG.Mobile.Helpers;
 using System.Threading.Tasks;
+using KG.Mobile.ViewModels._03_Quality;
 
 namespace KG.Mobile.Views._03_Quality
 {
 	public partial class DataLogQualityPage : ContentPage
 	{
-		public DataLogQualityPage()
+		public DataLogQualityPage(DataLogQualityViewModel viewModel)
 		{
 			InitializeComponent ();
+            BindingContext = viewModel;
 
-            //Messaging Subscription - Set Barcode Entry Focus
-            MessagingCenter.Subscribe<string>(this, "DataLogQualityPage-SetBarcodeFocus", (msg) =>
+            viewModel.RequestBarcodeFocus += () =>
             {
-                if (Settings.AutoSelectEntryField)
+                MainThread.BeginInvokeOnMainThread(() =>
                 {
                     Barcode.Focus();
-                }
-            });
+                });
+            };
         }
 
         protected async override void OnAppearing()

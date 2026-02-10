@@ -17,7 +17,7 @@ using System.Windows.Input;
 
 namespace KG.Mobile.ViewModels._01_Inventory
 {
-    class InventoryShipViewModel : INotifyPropertyChanged
+    public class InventoryShipViewModel : INotifyPropertyChanged
     {
         private GraphQLApiServices _graphQLApiServices = new GraphQLApiServices();
         private GraphQLApiServicesHelper _graphQLApiServicesHelper = new GraphQLApiServicesHelper();
@@ -26,6 +26,8 @@ namespace KG.Mobile.ViewModels._01_Inventory
 
         //current item inventory and related data
         private Location_CMMES location { get; set; }
+
+        public event Action? RequestLocationFocus;
 
         #region Constructor
         public InventoryShipViewModel(SoundHelper soundHelper)
@@ -84,7 +86,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
                         ResultMessageVisible = false;
 
                         //save to log
-                        database.LogAdd(DateTime.Now, "Error", "Inventory Ship", value);
+                        _ = database.LogAdd(DateTime.Now, "Error", "Inventory Ship", value);
                     }
                     else
                     {
@@ -92,7 +94,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
                         ResultMessageVisible = true;
 
                         //save to log
-                        database.LogAdd(DateTime.Now, "Info", "Inventory Ship", value);
+                        _ = database.LogAdd(DateTime.Now, "Info", "Inventory Ship", value);
                     }
                     
                 }
@@ -210,8 +212,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
                     if (!String.IsNullOrEmpty(LocationName))
                     {
                         //Show Busy
-                        BusyMessage msg = new BusyMessage(true, "Find location");
-                        MessagingCenter.Send(msg, "BusyPopup");
+                        WeakReferenceMessenger.Default.Send(new BusyMessage(true, "Find location"));
 
                         location = await _graphQLApiServicesHelper.LocationGetByLocationName(LocationName);
 
@@ -236,13 +237,10 @@ namespace KG.Mobile.ViewModels._01_Inventory
                             LocationDescription = "";
                             location = null;
 
-                            MessagingCenter.Send("Show", "InventoryShipPage-SetMoveToLocationNameFocus");
-
                         }
 
                         //Hide Busy
-                        msg.visible = false;
-                        MessagingCenter.Send(msg, "BusyPopup");
+                        WeakReferenceMessenger.Default.Send(new BusyMessage(false, ""));
                     }
                     else
                     {
@@ -267,7 +265,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
                         ResultError = true;
                         Result = "No Entity selected";                        
                     }
-                    else if (item_inv?.Count == 0)
+                    else if (item_inv?.Count == 0 || item_inv == null)
                     {
                         ResultError = true;
                         Result = "No Inventory in Location selected";                       
@@ -277,6 +275,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
                         //Yes No Popup
                         bool response = await App.Current.MainPage.DisplayAlert("Ship Inventory", "Are you sure you want to ship all inventory in " + location.Name + "?", "Ok", "Cancel");
 
+                        await Task.Yield();
                         //If user responds yes, ship inventory
                         if (response)
                         {
@@ -285,8 +284,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
                             //set location name focus
                             if (Settings.AutoSelectEntryField)
                             {
-                                var entry = (CustomEntry)obj;
-                                entry.Focus();
+                                RequestLocationFocus?.Invoke();
                             }
                         }
                     }
@@ -302,35 +300,35 @@ namespace KG.Mobile.ViewModels._01_Inventory
 
             // Build list of lots to ship from inventory
             var inventoryShipPayload = item_inv
-            .Select(lot => new InventoryShipInput_CMMES { LotId = lot.LotId })
+            .Select(lot => new InventoryShipInput_CMMES { lotId = lot.LotId })
             .ToList();
 
             try
             {
                 // GraphQL mutation to move inventory
                 string mutation = @"
-                    mutation ShipInventory($inventoryShip: [inventoryShip!]) {
-                        inventoryShip(inventoryShip: $inventoryShip) {
-                            lotId
-                            productId
-                            lotParentId
-                            name
-                            description
-                            lotStateId
-                            lotStatusId
-                            gradeReasonId
-                            purchaseOrderId
-                            quantity
-                            unitOfMeasureId
-                            locationId
-                            data
-                            dateCreated
-                            userCreated
-                            dateUpdated
-                            userUpdated
-                            lotHistoryId
-                        }
+                mutation InventoryShip($inventoryShip: [inventoryShip!]) {
+                    inventoryShip(inventoryShip: $inventoryShip) {
+                        lotId
+                        productId
+                        lotParentId
+                        name
+                        description
+                        lotStateId
+                        lotStatusId
+                        gradeReasonId
+                        purchaseOrderId
+                        quantity
+                        unitOfMeasureId
+                        locationId
+                        data
+                        dateCreated
+                        userCreated
+                        dateUpdated
+                        userUpdated
+                        lotHistoryId
                     }
+                }
                 ";
 
                 // Prepare variables
@@ -340,17 +338,15 @@ namespace KG.Mobile.ViewModels._01_Inventory
                 };
 
                 // Call GraphQL executor
-                var response = await _graphQLApiServices.ExecuteAsync<List<Lot_CMMES>>(mutation, variables);
+                var response = await _graphQLApiServices.ExecuteAsync<InventoryShipResponse>(mutation, variables);
 
                 // Handle errors
                 if (response is PopupMessage popup)
                 {
                     WeakReferenceMessenger.Default.Send(new PopupErrorMessage(popup));
-                    return;
                 }
-
                 // Handle success
-                if (response is List<Lot_CMMES> movedLots && movedLots.Count > 0)
+                else if (response is InventoryShipResponse shippedLots && shippedLots.InventoryShip.Count > 0)
                 {
                     ResultError = false;
                     Result = "All Inventory Shipped from '" + location.Name + "'";
@@ -359,6 +355,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
                     LocationDescription = "";
                     location = null;
                     item_inv = null;
+
                 }
                 else
                 {
@@ -378,7 +375,7 @@ namespace KG.Mobile.ViewModels._01_Inventory
             finally
             {
                 // Hide Busy
-                WeakReferenceMessenger.Default.Send(new BusyMessage(false, string.Empty));
+                WeakReferenceMessenger.Default.Send(new BusyMessage(false, ""));
             }
         }
 
@@ -392,13 +389,14 @@ namespace KG.Mobile.ViewModels._01_Inventory
                     //reset related values
                     LocationName = "";
                     LocationDescription = "";
+                    item_inv_count_message = "";
                     location = null;
+                    item_inv = null;
 
                     //set location name focus
                     if (Settings.AutoSelectEntryField)
                     {
-                        var entry = (CustomEntry)obj;
-                        entry.Focus();
+                        RequestLocationFocus?.Invoke();
                     }
                 });
             }

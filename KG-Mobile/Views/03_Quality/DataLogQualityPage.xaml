@@ -3,12 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:KG.Mobile.ViewModels._03_Quality"
              xmlns:customcontrols="clr-namespace:KG.Mobile.CustomControls"
+             xmlns:behaviors="clr-namespace:KG.Mobile.Behaviors"
              x:Class="KG.Mobile.Views._03_Quality.DataLogQualityPage"
              Title="Defect">
-
-    <ContentPage.BindingContext>
-        <vm:DataLogQualityViewModel />
-    </ContentPage.BindingContext>
 
     <ScrollView>
         <StackLayout Orientation="Vertical" 
@@ -28,8 +25,18 @@
                     <ColumnDefinition Width="80*"/>
                     <ColumnDefinition Width="20*"/>
                 </Grid.ColumnDefinitions>
-                <customcontrols:CustomEntry Text="{Binding Barcode}" x:Name="Barcode" ReturnCommand="{Binding ExecuteBarcode}" FontAttributes="Bold" IsTextPredictionEnabled="False" IsSpellCheckEnabled="False"/>
-                <Button Text="X" Grid.Column="1" Command="{Binding CancelBarcode}" x:Name="CancelBarcode" BackgroundColor="DarkGray" TextColor="Red" WidthRequest="20"/>
+                <customcontrols:CustomEntry Text="{Binding Barcode}"
+                                            x:Name="Barcode"
+                                            ReturnCommand="{Binding ExecuteBarcode}"
+                                            FontAttributes="Bold"
+                                            IsTextPredictionEnabled="False"
+                                            IsSpellCheckEnabled="False">
+                    <customcontrols:CustomEntry.Behaviors>
+                        <behaviors:DisableKeyboardOnFocusBehavior />
+                    </customcontrols:CustomEntry.Behaviors>
+
+                </customcontrols:CustomEntry>
+                <Button Text="X" Grid.Column="1" Command="{Binding CancelBarcode}" x:Name="CancelBarcode" BackgroundColor="DarkGray" TextColor="Red" WidthRequest="60"/>
             </Grid>
 
             <!-- Pickers -->
@@ -41,8 +48,15 @@
 
             <!-- Auto Move Toggle -->
             <Grid Padding="2">
-                <Label Text="Move to Defect Location on Save" Grid.ColumnSpan="3" FontSize="Micro"/>
-                <Switch Grid.Column="4"  IsToggled="{Binding AutoMoveEnabled}"/>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="80*"/>
+                    <ColumnDefinition Width="20*"/>
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" Text="Move to Defect Location on Save" Grid.ColumnSpan="1" FontSize="Micro"  VerticalTextAlignment="Center"/>
+                <Switch Grid.Column="1"  IsToggled="{Binding AutoMoveEnabled}"/>
             </Grid>
 
             <!-- Spacing -->

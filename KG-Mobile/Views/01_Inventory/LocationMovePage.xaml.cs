@@ -1,32 +1,33 @@
-﻿
+﻿using CommunityToolkit.Mvvm.Messaging;
 using KG.Mobile.Helpers;
+using KG.Mobile.Models;
+using KG.Mobile.ViewModels._01_Inventory;
 using System.Threading.Tasks;
 
 namespace KG.Mobile.Views._01_Inventory
 {
 	public partial class LocationMovePage : ContentPage
 	{
-		public LocationMovePage()
+		public LocationMovePage(LocationMoveViewModel viewModel)
 		{
 			InitializeComponent ();
+            BindingContext = viewModel;
 
-            //Messaging Subscription - Set LocationName Entry Focus
-            MessagingCenter.Subscribe<string>(this, "LocationMovePage-SetLocationNameFocus", (msg) =>
+            viewModel.RequestLocationFocus += () =>
             {
-                if (Settings.AutoSelectEntryField)
+                MainThread.BeginInvokeOnMainThread(() =>
                 {
                     LocationName.Focus();
-                }
-            });
+                });
+            };
 
-            //Messaging Subscription - Set MoveToLocationName Entry Focus
-            MessagingCenter.Subscribe<string>(this, "LocationMovePage-SetMoveToLocationNameFocus", (msg) =>
+            viewModel.RequestMoveToLocationFocus += () =>
             {
-                if (Settings.AutoSelectEntryField)
+                MainThread.BeginInvokeOnMainThread(() =>
                 {
                     MoveToLocationName.Focus();
-                }
-            });
+                });
+            };
         }
 
         protected async override void OnAppearing()
@@ -39,7 +40,14 @@ namespace KG.Mobile.Views._01_Inventory
             {
                 base.OnAppearing();
                 await Task.Delay(600);
-                LocationName.Focus();
+                if (string.IsNullOrEmpty(LocationName.Text))
+                {
+                    LocationName.Focus();
+                }
+                else
+                {
+                    MoveToLocationName.Focus();
+                }
             }
         }
     }
