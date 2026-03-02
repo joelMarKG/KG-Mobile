@@ -3,24 +3,8 @@
   "WorkspaceRootPath": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|c:\\users\\joel.marini\\desktop\\kg repos\\kg-mobile\\kg-mobile\\viewmodels\\01_inventory\\inventoryshipviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|solutionrelative:viewmodels\\01_inventory\\inventoryshipviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|c:\\users\\joel.marini\\desktop\\kg repos\\kg-mobile\\kg-mobile\\appshell.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|solutionrelative:appshell.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|c:\\users\\joel.marini\\desktop\\kg repos\\kg-mobile\\kg-mobile\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|solutionrelative:app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|c:\\users\\joel.marini\\desktop\\kg repos\\kg-mobile\\kg-mobile\\views\\01_inventory\\inventoryshippage.xaml||{2974C621-7033-421A-B08A-11D27B021D1B}",
-      "RelativeMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|solutionrelative:views\\01_inventory\\inventoryshippage.xaml||{2974C621-7033-421A-B08A-11D27B021D1B}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|c:\\users\\joel.marini\\desktop\\kg repos\\kg-mobile\\kg-mobile\\kg.mobile.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
-      "RelativeMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|solutionrelative:kg.mobile.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+      "AbsoluteMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|c:\\users\\joel.marini\\desktop\\kg repos\\kg-mobile\\kg-mobile\\helpers\\settings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4B13073B-32BA-4442-A681-EF8BF1945043}|KG.Mobile.csproj|solutionrelative:helpers\\settings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -29,76 +13,20 @@
       "VerticalTabListWidth": 256,
       "DocumentGroups": [
         {
-          "DockedWidth": 342,
-          "SelectedChildIndex": 3,
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
           "Children": [
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{f96a0d64-71fd-316f-b663-924c78154f2a}"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "AppShell.xaml.cs",
-              "DocumentMoniker": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\AppShell.xaml.cs",
-              "RelativeDocumentMoniker": "AppShell.xaml.cs",
-              "ToolTip": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\AppShell.xaml.cs",
-              "RelativeToolTip": "AppShell.xaml.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-09T03:18:17.254Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "App.xaml.cs",
-              "DocumentMoniker": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\App.xaml.cs",
-              "RelativeDocumentMoniker": "App.xaml.cs",
-              "ToolTip": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\App.xaml.cs",
-              "RelativeToolTip": "App.xaml.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAswAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-09T03:17:50.245Z",
-              "EditorCaption": ""
-            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "InventoryShipViewModel.cs",
-              "DocumentMoniker": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\ViewModels\\01_Inventory\\InventoryShipViewModel.cs",
-              "RelativeDocumentMoniker": "ViewModels\\01_Inventory\\InventoryShipViewModel.cs",
-              "ToolTip": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\ViewModels\\01_Inventory\\InventoryShipViewModel.cs",
-              "RelativeToolTip": "ViewModels\\01_Inventory\\InventoryShipViewModel.cs",
-              "ViewState": "AgIAAFkBAAAAAAAAAAAUwGABAAAAAAAAAAAAAA==",
+              "Title": "Settings.cs",
+              "DocumentMoniker": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\Helpers\\Settings.cs",
+              "RelativeDocumentMoniker": "Helpers\\Settings.cs",
+              "ToolTip": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\Helpers\\Settings.cs",
+              "RelativeToolTip": "Helpers\\Settings.cs",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAxwBAAAABFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-09T03:16:35.141Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "InventoryShipPage.xaml",
-              "DocumentMoniker": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\Views\\01_Inventory\\InventoryShipPage.xaml",
-              "RelativeDocumentMoniker": "Views\\01_Inventory\\InventoryShipPage.xaml",
-              "ToolTip": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\Views\\01_Inventory\\InventoryShipPage.xaml",
-              "RelativeToolTip": "Views\\01_Inventory\\InventoryShipPage.xaml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAhAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-02-09T03:16:21.1Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "KG.Mobile",
-              "DocumentMoniker": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\KG.Mobile.csproj",
-              "RelativeDocumentMoniker": "KG.Mobile.csproj",
-              "ToolTip": "C:\\Users\\joel.marini\\Desktop\\KG Repos\\KG-Mobile\\KG-Mobile\\KG.Mobile.csproj",
-              "RelativeToolTip": "KG.Mobile.csproj",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAtAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-02-09T02:58:16.535Z",
+              "WhenOpened": "2026-02-27T00:25:56.268Z",
               "EditorCaption": ""
             }
           ]

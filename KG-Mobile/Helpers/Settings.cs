@@ -8,10 +8,10 @@ namespace KG.Mobile.Helpers
         #region Setting Constants
 
         private const string GraphQLApiUrlKey = "GraphQlApiUrl";
-        private static readonly string GraphQLApiUrlDefault = "http://WSDEVWWWF001/CMMES.Core.Graph/api/graphql";
+        private static readonly string GraphQLApiUrlDefault = "http://KGPCMWEB01/CMMES.Core.Graph/api/graphql";
 
         private const string GraphQLApiSecurityUrlKey = "GraphQlApiSecurityUrl";
-        private static readonly string GraphQLApiSecurityUrlDefault = "http://WSDEVWWWF001/CMMES.Security.Graph/api/graphql";
+        private static readonly string GraphQLApiSecurityUrlDefault = "http://KGPCMWEB01/CMMES.Security.Graph/api/graphql";
 
         private const string UsernameKey = "Username";
         private static readonly string UsernameDefault = "KG.Mobile";
